@@ -21,16 +21,35 @@ router.get('/', async (req, res) => {
 
 router.post('/', protectAdmin, async (req, res) => {
   try {
+    const highlights = Array.isArray(req.body.highlights)
+      ? req.body.highlights
+      : typeof req.body.highlights === 'string'
+      ? req.body.highlights.split('\n').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    const skills = Array.isArray(req.body.skills)
+      ? req.body.skills
+      : typeof req.body.skills === 'string'
+      ? req.body.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    const payload = { ...req.body, highlights, skills };
+
     if (isDbConnected()) {
-      const exp = new Experience(req.body);
+      const exp = new Experience(payload);
       const saved = await exp.save();
       return res.status(201).json(saved);
     }
-    const saved = store.addExperience(req.body);
+    const saved = store.addExperience(payload);
     return res.status(201).json(saved);
   } catch (error) {
-    const saved = store.addExperience(req.body);
-    return res.status(201).json(saved);
+    console.error('Experience create error:', error);
+    try {
+      const saved = store.addExperience(req.body);
+      return res.status(201).json(saved);
+    } catch (e) {
+      return res.status(400).json({ message: error.message });
+    }
   }
 });
 

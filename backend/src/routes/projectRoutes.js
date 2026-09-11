@@ -37,16 +37,29 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', protectAdmin, async (req, res) => {
   try {
+    const technologies = Array.isArray(req.body.technologies)
+      ? req.body.technologies
+      : typeof req.body.technologies === 'string'
+      ? req.body.technologies.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    const payload = { ...req.body, technologies };
+
     if (isDbConnected()) {
-      const project = new Project(req.body);
+      const project = new Project(payload);
       const saved = await project.save();
       return res.status(201).json(saved);
     }
-    const saved = store.addProject(req.body);
+    const saved = store.addProject(payload);
     return res.status(201).json(saved);
   } catch (error) {
-    const saved = store.addProject(req.body);
-    return res.status(201).json(saved);
+    console.error('Project create error:', error);
+    try {
+      const saved = store.addProject(req.body);
+      return res.status(201).json(saved);
+    } catch (e) {
+      return res.status(400).json({ message: error.message });
+    }
   }
 });
 

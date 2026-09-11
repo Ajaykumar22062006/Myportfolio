@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getEducation } from '../services/api';
-import { GraduationCap, Calendar, Building, BookOpen } from 'lucide-react';
+import { GraduationCap, Calendar, Building, BookOpen, Book } from 'lucide-react';
 
 export default function Education() {
   const [educationItems, setEducationItems] = useState([]);
@@ -28,7 +28,7 @@ export default function Education() {
           <span className="section-tag">Academic Background</span>
           <h2 className="section-title">Education</h2>
           <p className="section-subtitle">
-            Formal education foundation in Computer Science and Engineering.
+            Formal academic qualification & education background.
           </p>
         </div>
 
@@ -61,7 +61,7 @@ export default function Education() {
                     <GraduationCap size={28} />
                   </div>
 
-                  <div>
+                  <div style={{ flexGrow: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
                       <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                         {edu.degree}
@@ -81,7 +81,68 @@ export default function Education() {
                           {edu.status}
                         </span>
                       )}
+
+                      {(edu.cgpa || edu.CGPA || edu.score) && String(edu.cgpa || edu.CGPA || edu.score).trim() !== '' && (
+                        <span
+                          style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            color: '#10b981',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                          }}
+                        >
+                          {String(edu.cgpa || edu.CGPA || edu.score).toLowerCase().includes('cgpa')
+                            ? (edu.cgpa || edu.CGPA || edu.score)
+                            : `CGPA: ${edu.cgpa || edu.CGPA || edu.score}`}
+                        </span>
+                      )}
+
+                      {(edu.percentage || edu.Percentage || edu.marks) && String(edu.percentage || edu.Percentage || edu.marks).trim() !== '' && (
+                        <span
+                          style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                            color: '#818cf8',
+                            border: '1px solid rgba(99, 102, 241, 0.3)',
+                          }}
+                        >
+                          {String(edu.percentage || edu.Percentage || edu.marks).toLowerCase().includes('percentage')
+                            ? (edu.percentage || edu.Percentage || edu.marks)
+                            : `Percentage: ${edu.percentage || edu.Percentage || edu.marks}`}
+                        </span>
+                      )}
+
+                      {(edu.result || edu.Result || edu.grade) && String(edu.result || edu.Result || edu.grade).trim() !== '' && (
+                        <span
+                          style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                            color: '#f59e0b',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                          }}
+                        >
+                          {String(edu.result || edu.Result || edu.grade).toLowerCase().includes('result')
+                            ? (edu.result || edu.Result || edu.grade)
+                            : `Result: ${edu.result || edu.Result || edu.grade}`}
+                        </span>
+                      )}
                     </div>
+
+                    {edu.department && (
+                      <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Book size={15} style={{ color: 'var(--accent-cyan)' }} />
+                        <span>Department / Branch: <strong style={{ color: 'var(--text-primary)' }}>{edu.department}</strong></span>
+                      </div>
+                    )}
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-cyan)', fontWeight: 600, fontSize: '1rem', marginBottom: '0.5rem' }}>
                       <Building size={16} />
@@ -96,7 +157,7 @@ export default function Education() {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
                       <Calendar size={15} />
-                      <span>Duration: {edu.duration} {edu.graduationYear ? `(Expected Graduation: ${edu.graduationYear})` : ''}</span>
+                      <span>Duration: {edu.duration} {edu.graduationYear ? `(Graduation: ${edu.graduationYear})` : ''}</span>
                     </div>
                   </div>
                 </div>
@@ -107,7 +168,7 @@ export default function Education() {
                     <div>
                       <h4 style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                         <BookOpen size={16} style={{ color: 'var(--accent-cyan)' }} />
-                        Academic Focus & Learning:
+                        Academic Highlights & Achievements:
                       </h4>
                       <ul style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.7 }}>
                         {edu.highlights.map((h, hIdx) => (

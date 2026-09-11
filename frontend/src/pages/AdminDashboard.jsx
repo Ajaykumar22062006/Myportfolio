@@ -5,6 +5,7 @@ import {
   updateProfile,
   getEducation,
   createEducation,
+  updateEducation,
   deleteEducation,
   getSkills,
   createSkill,
@@ -41,6 +42,7 @@ import {
   Upload,
   CheckCircle2,
   FileCheck,
+  Pencil,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -64,13 +66,18 @@ export default function AdminDashboard() {
 
   const [educationList, setEducationList] = useState([]);
   const [showEduModal, setShowEduModal] = useState(false);
+  const [editingEduId, setEditingEduId] = useState(null);
   const [newEdu, setNewEdu] = useState({
     degree: '',
+    department: '',
     college: '',
     university: '',
     duration: '',
     graduationYear: '',
     status: 'In Progress',
+    cgpa: '',
+    percentage: '',
+    result: '',
     highlights: '',
   });
 
@@ -198,15 +205,56 @@ export default function AdminDashboard() {
   };
 
   // Education CRUD
-  const handleAddEducation = async (e) => {
+  const handleOpenAddEduModal = () => {
+    setEditingEduId(null);
+    setNewEdu({
+      degree: '',
+      department: '',
+      college: '',
+      university: '',
+      duration: '',
+      graduationYear: '',
+      status: 'In Progress',
+      cgpa: '',
+      percentage: '',
+      result: '',
+      highlights: '',
+    });
+    setShowEduModal(true);
+  };
+
+  const handleEditEducation = (edu) => {
+    setEditingEduId(edu._id || edu.id);
+    setNewEdu({
+      degree: edu.degree || '',
+      department: edu.department || '',
+      college: edu.college || '',
+      university: edu.university || '',
+      duration: edu.duration || '',
+      graduationYear: edu.graduationYear || '',
+      status: edu.status || 'In Progress',
+      cgpa: edu.cgpa || '',
+      percentage: edu.percentage || '',
+      result: edu.result || '',
+      highlights: Array.isArray(edu.highlights) ? edu.highlights.join('\n') : edu.highlights || '',
+    });
+    setShowEduModal(true);
+  };
+
+  const handleSaveEducation = async (e) => {
     e.preventDefault();
     try {
-      await createEducation(newEdu);
+      if (editingEduId) {
+        await updateEducation(editingEduId, newEdu);
+      } else {
+        await createEducation(newEdu);
+      }
       setShowEduModal(false);
-      setNewEdu({ degree: '', college: '', university: '', duration: '', graduationYear: '', status: 'In Progress', highlights: '' });
+      setEditingEduId(null);
+      setNewEdu({ degree: '', department: '', college: '', university: '', duration: '', graduationYear: '', status: 'In Progress', cgpa: '', percentage: '', result: '', highlights: '' });
       loadDashboardData();
     } catch (err) {
-      alert('Failed to add education');
+      alert(err.response?.data?.message || 'Failed to save education record');
     }
   };
 
@@ -216,7 +264,7 @@ export default function AdminDashboard() {
         await deleteEducation(id);
         loadDashboardData();
       } catch (err) {
-        alert('Failed to delete education');
+        alert(err.response?.data?.message || 'Failed to delete education');
       }
     }
   };
@@ -230,7 +278,7 @@ export default function AdminDashboard() {
       setNewSkill({ name: '', category: 'Frontend', level: 'Core' });
       loadDashboardData();
     } catch (err) {
-      alert('Failed to add skill');
+      alert(err.response?.data?.message || 'Failed to add skill');
     }
   };
 
@@ -240,7 +288,7 @@ export default function AdminDashboard() {
         await deleteSkill(id);
         loadDashboardData();
       } catch (err) {
-        alert('Failed to delete skill');
+        alert(err.response?.data?.message || 'Failed to delete skill');
       }
     }
   };
@@ -254,7 +302,7 @@ export default function AdminDashboard() {
       setNewExp({ role: '', company: '', location: '', period: '', type: 'Industry Internship', description: '', highlights: '', skills: '' });
       loadDashboardData();
     } catch (err) {
-      alert('Failed to add experience');
+      alert(err.response?.data?.message || 'Failed to add experience');
     }
   };
 
@@ -264,7 +312,7 @@ export default function AdminDashboard() {
         await deleteExperience(id);
         loadDashboardData();
       } catch (err) {
-        alert('Failed to delete experience');
+        alert(err.response?.data?.message || 'Failed to delete experience');
       }
     }
   };
@@ -278,7 +326,7 @@ export default function AdminDashboard() {
       setNewProject({ title: '', category: 'Full Stack', type: 'Software Project', organization: '', duration: '', period: '', description: '', technologies: '', githubUrl: '', liveUrl: '' });
       loadDashboardData();
     } catch (err) {
-      alert('Failed to add project');
+      alert(err.response?.data?.message || 'Failed to add project');
     }
   };
 
@@ -537,7 +585,7 @@ export default function AdminDashboard() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Education Records</h2>
-                  <button onClick={() => setShowEduModal(true)} className="btn btn-primary btn-sm">
+                  <button onClick={handleOpenAddEduModal} className="btn btn-primary btn-sm">
                     <Plus size={16} />
                     <span>Add Education</span>
                   </button>
@@ -545,15 +593,27 @@ export default function AdminDashboard() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {educationList.map((edu) => (
-                    <div key={edu._id || edu.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{edu.degree}</h3>
-                        <div style={{ color: 'var(--accent-cyan)', fontSize: '0.9rem' }}>{edu.college} • {edu.university}</div>
+                    <div key={edu._id || edu.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                      <div style={{ flexGrow: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{edu.degree}</h3>
+                          {edu.cgpa && <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(16,185,129,0.2)', color: '#10b981', fontWeight: 700 }}>CGPA: {edu.cgpa}</span>}
+                          {edu.percentage && <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(99,102,241,0.2)', color: '#818cf8', fontWeight: 700 }}>Percentage: {edu.percentage}</span>}
+                          {edu.result && <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', fontWeight: 700 }}>Result: {edu.result}</span>}
+                        </div>
+                        <div style={{ color: 'var(--accent-cyan)', fontSize: '0.9rem', marginTop: '0.2rem' }}>{edu.college} {edu.university ? `• ${edu.university}` : ''}</div>
+                        {edu.department && <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Branch/Dept: {edu.department}</div>}
                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Duration: {edu.duration} | Status: {edu.status}</div>
                       </div>
-                      <button onClick={() => handleDeleteEducation(edu._id || edu.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
-                        <Trash2 size={16} />
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => handleEditEducation(edu)} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-cyan)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+                          <Pencil size={15} />
+                          <span>Edit</span>
+                        </button>
+                        <button onClick={() => handleDeleteEducation(edu._id || edu.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -731,17 +791,56 @@ export default function AdminDashboard() {
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add New Education Record</h3>
-              <button onClick={() => setShowEduModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{editingEduId ? 'Edit Education Record' : 'Add New Education Record'}</h3>
+              <button onClick={() => { setShowEduModal(false); setEditingEduId(null); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
             </div>
-            <form onSubmit={handleAddEducation} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input type="text" placeholder="Degree (e.g. B.Tech)" required value={newEdu.degree} onChange={(e) => setNewEdu({ ...newEdu, degree: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="College Name" required value={newEdu.college} onChange={(e) => setNewEdu({ ...newEdu, college: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="University Name" value={newEdu.university} onChange={(e) => setNewEdu({ ...newEdu, university: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="Duration (e.g. 2023 – 2027)" required value={newEdu.duration} onChange={(e) => setNewEdu({ ...newEdu, duration: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="Status (e.g. In Progress)" value={newEdu.status} onChange={(e) => setNewEdu({ ...newEdu, status: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <textarea placeholder="Highlights (one per line)" rows="3" value={newEdu.highlights} onChange={(e) => setNewEdu({ ...newEdu, highlights: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Education</button>
+            <form onSubmit={handleSaveEducation} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Degree / Level</label>
+                <input type="text" placeholder="Degree (e.g. B.Tech / HSC / SSLC)" required value={newEdu.degree} onChange={(e) => setNewEdu({ ...newEdu, degree: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Department / Branch</label>
+                <input type="text" placeholder="Department / Branch (e.g. Artificial Intelligence and Data Science)" value={newEdu.department} onChange={(e) => setNewEdu({ ...newEdu, department: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>College / School Name</label>
+                <input type="text" placeholder="College / School Name" required value={newEdu.college} onChange={(e) => setNewEdu({ ...newEdu, college: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>University Name / Board</label>
+                <input type="text" placeholder="University Name" value={newEdu.university} onChange={(e) => setNewEdu({ ...newEdu, university: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Duration</label>
+                  <input type="text" placeholder="Duration (e.g. 2023-2027)" required value={newEdu.duration} onChange={(e) => setNewEdu({ ...newEdu, duration: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Status</label>
+                  <input type="text" placeholder="Status (e.g. In Progress / Completed)" value={newEdu.status} onChange={(e) => setNewEdu({ ...newEdu, status: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+                </div>
+              </div>
+              <div style={{ background: 'rgba(56, 189, 248, 0.05)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(56, 189, 248, 0.2)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Academic Performance / Marks</div>
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>CGPA Box (for College / B.Tech)</label>
+                  <input type="text" placeholder="e.g. 8.5 / 10" value={newEdu.cgpa} onChange={(e) => setNewEdu({ ...newEdu, cgpa: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '0.4rem', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Percentage Box (for 12th Grade / HSC)</label>
+                  <input type="text" placeholder="e.g. 90%" value={newEdu.percentage} onChange={(e) => setNewEdu({ ...newEdu, percentage: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '0.4rem', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Result Box (for 10th Grade / SSLC)</label>
+                  <input type="text" placeholder="e.g. Pass / First Class" value={newEdu.result} onChange={(e) => setNewEdu({ ...newEdu, result: e.target.value })} style={{ width: '100%', padding: '0.6rem', borderRadius: '0.4rem', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Highlights (one per line)</label>
+                <textarea placeholder="Highlights (one per line)" rows="3" value={newEdu.highlights} onChange={(e) => setNewEdu({ ...newEdu, highlights: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>{editingEduId ? 'Update Education Record' : 'Save Education Record'}</button>
             </form>
           </div>
         </div>
