@@ -14,10 +14,10 @@ export default function Certificates() {
     const fetchCerts = async () => {
       try {
         const data = await getCertificates();
-        setCertificates(Array.isArray(data) && data.length > 0 ? data : DEFAULT_CERTIFICATES);
+        setCertificates(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to load certificates:', err);
-        setCertificates(DEFAULT_CERTIFICATES);
+        setCertificates([]);
       }
     };
     fetchCerts();

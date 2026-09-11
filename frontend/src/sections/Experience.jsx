@@ -11,10 +11,10 @@ export default function Experience() {
       setLoading(true);
       try {
         const data = await getExperience();
-        setExperienceItems(Array.isArray(data) && data.length > 0 ? data : DEFAULT_EXPERIENCE);
+        setExperienceItems(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to load experience:', err);
-        setExperienceItems(DEFAULT_EXPERIENCE);
+        setExperienceItems([]);
       } finally {
         setLoading(false);
       }

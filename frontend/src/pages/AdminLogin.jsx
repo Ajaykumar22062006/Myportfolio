@@ -5,7 +5,7 @@ import { Lock, User, Key, AlertCircle, ArrowLeft } from 'lucide-react';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function AdminLogin() {
       await adminLogin({ username, password });
       navigate('/admin/dashboard');
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Invalid admin credentials');
+      setError(typeof err === 'string' ? err : (err?.message || 'Invalid admin credentials'));
     } finally {
       setLoading(false);
     }
@@ -166,6 +166,10 @@ export default function AdminLogin() {
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
+
+        <div style={{ marginTop: '1.25rem', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          Default Admin: <code style={{ color: 'var(--accent-color)', background: 'var(--bg-secondary)', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>admin</code> / <code style={{ color: 'var(--accent-color)', background: 'var(--bg-secondary)', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>admin123</code>
+        </div>
       </div>
     </div>
   );

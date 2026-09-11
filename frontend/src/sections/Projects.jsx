@@ -13,10 +13,10 @@ export default function Projects() {
       setLoading(true);
       try {
         const data = await getProjects();
-        setProjects(Array.isArray(data) && data.length > 0 ? data : DEFAULT_PROJECTS);
+        setProjects(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to load projects:', err);
-        setProjects(DEFAULT_PROJECTS);
+        setProjects([]);
       } finally {
         setLoading(false);
       }

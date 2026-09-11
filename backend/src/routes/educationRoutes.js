@@ -11,14 +11,7 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 router.get('/', async (req, res) => {
   try {
     if (isDbConnected()) {
-      let items = await Education.find().sort({ createdAt: -1 });
-
-      // If DB has no education items yet, seed default items
-      if (items.length === 0) {
-        const seedData = store.getEducation().map(({ _id, ...rest }) => rest);
-        items = await Education.insertMany(seedData);
-      }
-
+      const items = await Education.find().sort({ createdAt: -1 });
       return res.json(items);
     }
     return res.json(store.getEducation());
@@ -36,8 +29,6 @@ router.post('/', protectAdmin, async (req, res) => {
       : [];
 
     const payload = { ...req.body, highlights };
-
-    // Always add to memory store as backup
     const memSaved = store.addEducation(payload);
 
     if (isDbConnected()) {
@@ -46,7 +37,6 @@ router.post('/', protectAdmin, async (req, res) => {
         const saved = await edu.save();
         return res.status(201).json(saved);
       } catch (dbErr) {
-        console.error('MongoDB save education error:', dbErr);
         return res.status(201).json(memSaved);
       }
     }
@@ -68,33 +58,16 @@ router.put('/:id', protectAdmin, async (req, res) => {
     const payload = { ...req.body };
     if (highlights !== undefined) payload.highlights = highlights;
 
-    // Update in memory store
     const memUpdated = store.updateEducation(req.params.id, payload);
 
-    if (isDbConnected()) {
-      if (isValidObjectId(req.params.id)) {
-        const updated = await Education.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: false });
-        if (updated) return res.json(updated);
-      } else {
-        // Match existing record in MongoDB by degree if ID is non-ObjectId string like 'edu_3'
-        const degreeQuery = payload.degree || '';
-        const match = await Education.findOne({ degree: new RegExp(degreeQuery.split(' ')[0], 'i') });
-        if (match) {
-          Object.assign(match, payload);
-          const saved = await match.save();
-          return res.json(saved);
-        }
-      }
+    if (isDbConnected() && isValidObjectId(req.params.id)) {
+      const updated = await Education.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: false });
+      if (updated) return res.json(updated);
     }
 
     if (memUpdated) return res.json(memUpdated);
     return res.json({ _id: req.params.id, ...payload });
   } catch (error) {
-    console.error('Education update error:', error);
-    try {
-      const updated = store.updateEducation(req.params.id, req.body);
-      if (updated) return res.json(updated);
-    } catch (e) {}
     return res.status(400).json({ message: error.message });
   }
 });
@@ -102,15 +75,8 @@ router.put('/:id', protectAdmin, async (req, res) => {
 router.delete('/:id', protectAdmin, async (req, res) => {
   try {
     store.deleteEducation(req.params.id);
-    if (isDbConnected()) {
-      if (isValidObjectId(req.params.id)) {
-        await Education.findByIdAndDelete(req.params.id);
-      } else {
-        const degreeQuery = req.query?.degree || '';
-        if (degreeQuery) {
-          await Education.deleteOne({ degree: new RegExp(degreeQuery, 'i') });
-        }
-      }
+    if (isDbConnected() && isValidObjectId(req.params.id)) {
+      await Education.findByIdAndDelete(req.params.id);
     }
     return res.json({ message: 'Education deleted successfully' });
   } catch (error) {

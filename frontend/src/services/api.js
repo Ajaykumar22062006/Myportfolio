@@ -194,10 +194,7 @@ export const updateProfile = async (data) => {
 export const getEducation = async () => {
   try {
     const res = await api.get('/education');
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      return res.data;
-    }
-    return DEFAULT_EDUCATION;
+    return Array.isArray(res.data) ? res.data : DEFAULT_EDUCATION;
   } catch (err) {
     console.warn('Backend education API unavailable, using default education data.');
     return DEFAULT_EDUCATION;
@@ -249,10 +246,7 @@ export const deleteSkill = async (id) => {
 export const getExperience = async () => {
   try {
     const res = await api.get('/experience');
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      return res.data;
-    }
-    return DEFAULT_EXPERIENCE;
+    return Array.isArray(res.data) ? res.data : DEFAULT_EXPERIENCE;
   } catch (err) {
     console.warn('Backend experience API unavailable, using default experience data.');
     return DEFAULT_EXPERIENCE;
@@ -278,10 +272,7 @@ export const deleteExperience = async (id) => {
 export const getProjects = async () => {
   try {
     const res = await api.get('/projects');
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      return res.data;
-    }
-    return DEFAULT_PROJECTS;
+    return Array.isArray(res.data) ? res.data : DEFAULT_PROJECTS;
   } catch (err) {
     console.warn('Backend projects API unavailable, using default projects data.');
     return DEFAULT_PROJECTS;
@@ -307,10 +298,7 @@ export const deleteProject = async (id) => {
 export const getCertificates = async () => {
   try {
     const res = await api.get('/certificates');
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      return res.data;
-    }
-    return DEFAULT_CERTIFICATES;
+    return Array.isArray(res.data) ? res.data : DEFAULT_CERTIFICATES;
   } catch (err) {
     console.warn('Backend certificates API unavailable, using default certificates data.');
     return DEFAULT_CERTIFICATES;
@@ -334,11 +322,21 @@ export const deleteCertificate = async (id) => {
 
 // Auth & Admin APIs
 export const adminLogin = async (credentials) => {
-  const res = await api.post('/auth/login', credentials);
-  if (res.data?.token) {
-    localStorage.setItem('admin_token', res.data.token);
+  try {
+    const res = await api.post('/auth/login', credentials);
+    if (res.data?.token) {
+      localStorage.setItem('admin_token', res.data.token);
+    }
+    return res.data;
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.message) {
+      throw err.response.data.message;
+    }
+    if (err.code === 'ERR_NETWORK' || !err.response) {
+      throw 'Unable to connect to backend server. Please verify backend is running on port 5000.';
+    }
+    throw err.message || 'Invalid admin credentials';
   }
-  return res.data;
 };
 
 // Contact API

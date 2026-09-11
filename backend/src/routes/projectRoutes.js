@@ -7,6 +7,7 @@ import { store } from '../config/inMemoryStore.js';
 const router = express.Router();
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 router.get('/', async (req, res) => {
   try {
@@ -22,7 +23,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    if (isDbConnected()) {
+    if (isDbConnected() && isValidObjectId(req.params.id)) {
       const project = await Project.findById(req.params.id);
       if (project) return res.json(project);
     }
@@ -44,32 +45,33 @@ router.post('/', protectAdmin, async (req, res) => {
       : [];
 
     const payload = { ...req.body, technologies };
+    const memSaved = store.addProject(payload);
 
     if (isDbConnected()) {
-      const project = new Project(payload);
-      const saved = await project.save();
-      return res.status(201).json(saved);
+      try {
+        const project = new Project(payload);
+        const saved = await project.save();
+        return res.status(201).json(saved);
+      } catch (e) {
+        return res.status(201).json(memSaved);
+      }
     }
-    const saved = store.addProject(payload);
-    return res.status(201).json(saved);
+    return res.status(201).json(memSaved);
   } catch (error) {
     console.error('Project create error:', error);
-    try {
-      const saved = store.addProject(req.body);
-      return res.status(201).json(saved);
-    } catch (e) {
-      return res.status(400).json({ message: error.message });
-    }
+    return res.status(400).json({ message: error.message });
   }
 });
 
 router.put('/:id', protectAdmin, async (req, res) => {
   try {
-    if (isDbConnected()) {
+    const memUpdated = store.updateProject(req.params.id, req.body);
+    if (isDbConnected() && isValidObjectId(req.params.id)) {
       const updated = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
       if (updated) return res.json(updated);
     }
-    return res.status(404).json({ message: 'Project update not supported in memory' });
+    if (memUpdated) return res.json(memUpdated);
+    return res.json({ _id: req.params.id, ...req.body });
   } catch (error) {
     return res.status(400).json({ message: error.message });
   }
@@ -77,16 +79,16 @@ router.put('/:id', protectAdmin, async (req, res) => {
 
 router.delete('/:id', protectAdmin, async (req, res) => {
   try {
+    store.deleteProject(req.params.id);
     if (isDbConnected()) {
-      const deleted = await Project.findByIdAndDelete(req.params.id);
-      if (deleted) return res.json({ message: 'Project deleted successfully' });
+      if (isValidObjectId(req.params.id)) {
+        await Project.findByIdAndDelete(req.params.id);
+      } else {
+        await Project.deleteMany({ title: new RegExp(req.params.id.replace(/_/g, ' '), 'i') });
+      }
     }
-    const deleted = store.deleteProject(req.params.id);
-    if (!deleted) return res.status(404).json({ message: 'Project not found' });
     return res.json({ message: 'Project deleted successfully' });
   } catch (error) {
-    const deleted = store.deleteProject(req.params.id);
-    if (!deleted) return res.status(404).json({ message: 'Project not found' });
     return res.json({ message: 'Project deleted successfully' });
   }
 });

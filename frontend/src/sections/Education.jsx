@@ -11,10 +11,10 @@ export default function Education() {
       setLoading(true);
       try {
         const data = await getEducation();
-        setEducationItems(Array.isArray(data) && data.length > 0 ? data : DEFAULT_EDUCATION);
+        setEducationItems(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to load education:', err);
-        setEducationItems(DEFAULT_EDUCATION);
+        setEducationItems([]);
       } finally {
         setLoading(false);
       }

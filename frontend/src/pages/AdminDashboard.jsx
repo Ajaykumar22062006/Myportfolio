@@ -263,6 +263,7 @@ export default function AdminDashboard() {
     if (window.confirm('Delete this education entry?')) {
       try {
         await deleteEducation(id);
+        setEducationList((prev) => prev.filter((item) => item._id !== id && item.id !== id));
         loadDashboardData();
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete education');
@@ -287,6 +288,7 @@ export default function AdminDashboard() {
     if (window.confirm('Delete this skill?')) {
       try {
         await deleteSkill(id);
+        setSkillsList((prev) => prev.filter((item) => item._id !== id && item.id !== id));
         loadDashboardData();
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete skill');
@@ -311,6 +313,7 @@ export default function AdminDashboard() {
     if (window.confirm('Delete this experience entry?')) {
       try {
         await deleteExperience(id);
+        setExperienceList((prev) => prev.filter((item) => item._id !== id && item.id !== id));
         loadDashboardData();
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete experience');
@@ -335,6 +338,7 @@ export default function AdminDashboard() {
     if (window.confirm('Delete this project?')) {
       try {
         await deleteProject(id);
+        setProjectsList((prev) => prev.filter((item) => item._id !== id && item.id !== id));
         loadDashboardData();
       } catch (err) {
         alert('Failed to delete project');
@@ -426,6 +430,7 @@ export default function AdminDashboard() {
     if (window.confirm('Delete this certificate?')) {
       try {
         await deleteCertificate(id);
+        setCertificatesList((prev) => prev.filter((item) => item._id !== id && item.id !== id));
         loadDashboardData();
       } catch (err) {
         alert('Failed to delete certificate');
@@ -438,6 +443,7 @@ export default function AdminDashboard() {
     if (window.confirm('Delete this message?')) {
       try {
         await deleteContactMessage(id);
+        setMessagesList((prev) => prev.filter((item) => item._id !== id && item.id !== id));
         loadDashboardData();
       } catch (err) {
         alert('Failed to delete message');
