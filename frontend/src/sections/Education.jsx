@@ -42,59 +42,27 @@ export default function Education() {
             No education records added yet.
           </div>
         ) : (
-          <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%', boxSizing: 'border-box' }}>
             {educationItems.map((edu, idx) => (
-              <div key={edu._id || edu.id || idx} className="glass-card" style={{ padding: '2rem', position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div
-                    style={{
-                      width: '52px',
-                      height: '52px',
-                      borderRadius: '12px',
-                      background: 'transparent',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--accent-cyan)',
-                      flexShrink: 0,
-                    }}
-                  >
+              <div key={edu._id || edu.id || idx} className="glass-card edu-card">
+                <div className="edu-card-content">
+                  <div className="edu-icon-wrapper">
                     <GraduationCap size={28} />
                   </div>
 
-                  <div style={{ flexGrow: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
-                      <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  <div className="edu-main-info">
+                    <div className="edu-degree-row">
+                      <h3 className="edu-degree-title">
                         {edu.degree}
                       </h3>
                       {edu.status && (
-                        <span
-                          style={{
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            backgroundColor: 'transparent',
-                            color: 'var(--accent-cyan)',
-                            border: '1px solid var(--accent-border-alpha)',
-                          }}
-                        >
+                        <span className="edu-badge">
                           {edu.status}
                         </span>
                       )}
 
                       {(edu.cgpa || edu.CGPA || edu.score) && String(edu.cgpa || edu.CGPA || edu.score).trim() !== '' && (
-                        <span
-                          style={{
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            backgroundColor: 'transparent',
-                            color: 'var(--accent-cyan)',
-                            border: '1px solid var(--accent-border-alpha)',
-                          }}
-                        >
+                        <span className="edu-badge">
                           {String(edu.cgpa || edu.CGPA || edu.score).toLowerCase().includes('cgpa')
                             ? (edu.cgpa || edu.CGPA || edu.score)
                             : `CGPA: ${edu.cgpa || edu.CGPA || edu.score}`}
@@ -102,17 +70,7 @@ export default function Education() {
                       )}
 
                       {(edu.percentage || edu.Percentage || edu.marks) && String(edu.percentage || edu.Percentage || edu.marks).trim() !== '' && (
-                        <span
-                          style={{
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            backgroundColor: 'transparent',
-                            color: 'var(--accent-cyan)',
-                            border: '1px solid var(--accent-border-alpha)',
-                          }}
-                        >
+                        <span className="edu-badge">
                           {String(edu.percentage || edu.Percentage || edu.marks).toLowerCase().includes('percentage')
                             ? (edu.percentage || edu.Percentage || edu.marks)
                             : `Percentage: ${edu.percentage || edu.Percentage || edu.marks}`}
@@ -120,17 +78,7 @@ export default function Education() {
                       )}
 
                       {(edu.result || edu.Result || edu.grade) && String(edu.result || edu.Result || edu.grade).trim() !== '' && (
-                        <span
-                          style={{
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            backgroundColor: 'transparent',
-                            color: 'var(--accent-cyan)',
-                            border: '1px solid var(--accent-border-alpha)',
-                          }}
-                        >
+                        <span className="edu-badge">
                           {String(edu.result || edu.Result || edu.grade).toLowerCase().includes('result')
                             ? (edu.result || edu.Result || edu.grade)
                             : `Result: ${edu.result || edu.Result || edu.grade}`}
@@ -139,47 +87,49 @@ export default function Education() {
                     </div>
 
                     {edu.department && (
-                      <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', fontWeight: 500, marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <Book size={15} style={{ color: 'var(--accent-cyan)' }} />
-                        <span>Department / Branch: <strong style={{ color: 'var(--text-primary)' }}>{edu.department}</strong></span>
+                      <div className="edu-dept-row">
+                        <Book size={15} style={{ color: 'var(--accent-cyan)', marginTop: '3px', flexShrink: 0 }} />
+                        <span className="edu-dept-text">Department / Branch: <strong style={{ color: 'var(--text-primary)' }}>{edu.department}</strong></span>
                       </div>
                     )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-cyan)', fontWeight: 600, fontSize: '1rem', marginBottom: '0.5rem' }}>
-                      <Building size={16} />
-                      <span>{edu.college}</span>
+                    <div className="edu-inst-row">
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
+                        <Building size={16} style={{ flexShrink: 0 }} />
+                        <span className="edu-college-name">{edu.college}</span>
+                      </div>
                       {edu.university && (
                         <>
-                          <span style={{ color: 'var(--text-muted)' }}>•</span>
-                          <span style={{ color: 'var(--text-secondary)' }}>{edu.university}</span>
+                          <span className="edu-univ-bullet">•</span>
+                          <span className="edu-univ-name">{edu.university}</span>
                         </>
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-                      <Calendar size={15} />
-                      <span>Duration: {edu.duration} {edu.graduationYear ? `(Graduation: ${edu.graduationYear})` : ''}</span>
+                    <div className="edu-duration-row">
+                      <Calendar size={15} style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span className="edu-duration-text">Duration: {edu.duration} {edu.graduationYear ? `(Graduation: ${edu.graduationYear})` : ''}</span>
                     </div>
                   </div>
                 </div>
 
                 {edu.highlights && edu.highlights.length > 0 && (
-                  <>
-                    <div style={{ margin: '1.25rem 0', height: '1px', background: 'var(--border-color)' }} />
+                  <div className="edu-highlights-container">
+                    <div style={{ margin: '1rem 0', height: '1px', background: 'var(--border-color)', width: '100%' }} />
                     <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <BookOpen size={16} style={{ color: 'var(--accent-cyan)' }} />
+                      <h4 className="edu-highlights-title">
+                        <BookOpen size={16} style={{ color: 'var(--accent-cyan)', flexShrink: 0, marginTop: '2px' }} />
                         Academic Highlights & Achievements:
                       </h4>
-                      <ul style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.7 }}>
+                      <ul className="edu-highlights-list">
                         {edu.highlights.map((h, hIdx) => (
-                          <li key={hIdx} style={{ marginBottom: '0.35rem' }}>
+                          <li key={hIdx}>
                             {h}
                           </li>
                         ))}
                       </ul>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             ))}

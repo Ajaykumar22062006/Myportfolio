@@ -264,3 +264,246 @@ section {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   Education Section Responsive Layout Styles
+   ========================================================================== */
+
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.edu-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.edu-card-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.edu-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+.edu-main-info {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.edu-degree-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.edu-degree-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background-color: transparent;
+  color: var(--accent-cyan);
+  border: 1px solid var(--accent-border-alpha);
+  white-space: nowrap;
+}
+
+.edu-dept-row {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-dept-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-inst-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.edu-college-name {
+  font-weight: 600;
+  color: var(--accent-cyan);
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-univ-bullet {
+  color: var(--text-muted);
+}
+
+.edu-univ-name {
+  color: var(--text-secondary);
+  font-weight: 500;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-duration-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-duration-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-highlights-container {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.edu-highlights-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.edu-highlights-list {
+  padding-left: 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edu-highlights-list li {
+  margin-bottom: 0.35rem;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* Mobile Responsiveness for Education Section (under 768px) */
+@media (max-width: 768px) {
+  .edu-card {
+    padding: 1.25rem 1rem;
+    border-radius: 0.85rem;
+  }
+
+  .edu-card-content {
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .edu-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .edu-degree-title {
+    font-size: 1.15rem;
+  }
+
+  .edu-inst-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .edu-univ-bullet {
+    display: none;
+  }
+
+  .edu-college-name {
+    font-size: 0.98rem;
+    width: 100%;
+  }
+
+  .edu-univ-name {
+    font-size: 0.88rem;
+    width: 100%;
+  }
+
+  .edu-highlights-list {
+    padding-left: 1rem;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .edu-card {
+    padding: 1.1rem 0.9rem;
+  }
+
+  .edu-card-content {
+    gap: 0.75rem;
+  }
+
+  .edu-badge {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+  }
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getProfile } from '../services/api';
-import { Mail, Code, Terminal, Server, Download, ExternalLink } from 'lucide-react';
+import { Code, Terminal, Server, Download, ExternalLink } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../components/SocialIcons';
 
 export default function Hero() {
@@ -75,7 +75,7 @@ export default function Hero() {
                 marginBottom: '1rem',
               }}
             >
-              Hi, I'm <span className="gradient-text" style={{ whiteSpace: 'nowrap' }}>{profile.name}</span>
+              Hi, I'm <span className="gradient-text" style={{ display: 'inline' }}>{profile.name}</span>
             </h1>
 
             <h2
@@ -184,35 +184,6 @@ export default function Hero() {
                   }}
                 >
                   <LinkedinIcon size={20} />
-                </a>
-
-                <a
-                  href={`mailto:${profile.email}`}
-                  aria-label="Email Contact"
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '10px',
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-color)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--text-primary)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--accent-cyan)';
-                    e.currentTarget.style.color = 'var(--accent-cyan)';
-                    e.currentTarget.style.transform = 'translateY(-3px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border-color)';
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <Mail size={20} />
                 </a>
               </div>
             </div>

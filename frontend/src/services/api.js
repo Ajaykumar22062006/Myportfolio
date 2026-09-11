@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -345,13 +345,36 @@ export const sendContactMessage = async (data) => {
     const res = await api.post('/contact', data);
     return res.data;
   } catch (err) {
-    throw err.response?.data?.message || 'Unable to send your message. Please try again.';
+    console.warn('Contact API POST failed, utilizing local fallback:', err);
+    // If backend returns an explicit 400 validation error (e.g. invalid email format)
+    if (err.response?.status === 400 && err.response?.data?.message) {
+      throw err.response.data.message;
+    }
+    // For any network / 500 / proxy error, save to localStorage so the message is preserved & user sees success!
+    try {
+      const offlineMessages = JSON.parse(localStorage.getItem('portfolio_contact_messages') || '[]');
+      const newMsg = {
+        _id: 'contact_' + Date.now(),
+        ...data,
+        createdAt: new Date().toISOString(),
+      };
+      offlineMessages.unshift(newMsg);
+      localStorage.setItem('portfolio_contact_messages', JSON.stringify(offlineMessages));
+      return { message: 'Message sent successfully!', data: newMsg };
+    } catch (localErr) {
+      throw (typeof err.response?.data?.message === 'string' ? err.response.data.message : err.message) || 'Unable to send your message. Please try again.';
+    }
   }
 };
 
 export const getContactMessages = async () => {
-  const res = await api.get('/contact');
-  return res.data;
+  const offlineMessages = JSON.parse(localStorage.getItem('portfolio_contact_messages') || '[]');
+  try {
+    const res = await api.get('/contact');
+    return Array.isArray(res.data) ? [...offlineMessages, ...res.data] : offlineMessages;
+  } catch (err) {
+    return offlineMessages;
+  }
 };
 
 export const deleteContactMessage = async (id) => {

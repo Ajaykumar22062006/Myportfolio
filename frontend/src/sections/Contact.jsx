@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { sendContactMessage } from '../services/api';
-import { Mail, Send, CheckCircle2, AlertCircle, MapPin } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, MapPin } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../components/SocialIcons';
 
 export default function Contact() {
@@ -62,11 +62,11 @@ export default function Contact() {
 
     setLoading(true);
     try {
-      await sendContactMessage(formData);
-      setSuccessMessage('Message sent successfully!');
+      const res = await sendContactMessage(formData);
+      setSuccessMessage(res?.message || 'Message sent successfully!');
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (err) {
-      setErrorMessage(typeof err === 'string' ? err : 'Unable to send your message. Please try again.');
+      setErrorMessage(typeof err === 'string' ? err : (err?.message || 'Unable to send your message. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function Contact() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
             gap: '3rem',
             maxWidth: '1050px',
             margin: '0 auto',
@@ -103,21 +103,7 @@ export default function Contact() {
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '10px',
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--accent-cyan)',
-                    }}
-                  >
-                    <Mail size={22} />
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Email</div>
                     <a
@@ -129,21 +115,7 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '10px',
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--accent-cyan)',
-                    }}
-                  >
-                    <GithubIcon size={22} />
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>GitHub Profile</div>
                     <a
@@ -157,21 +129,7 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '10px',
-                      background: 'rgba(56, 189, 248, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--accent-cyan)',
-                    }}
-                  >
-                    <LinkedinIcon size={22} />
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>LinkedIn Profile</div>
                     <a

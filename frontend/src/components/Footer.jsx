@@ -1,4 +1,4 @@
-import { Code2, Mail, Heart, ArrowUp } from 'lucide-react';
+import { Code2, Heart, ArrowUp } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from './SocialIcons';
 
 export default function Footer() {
@@ -124,24 +124,6 @@ export default function Footer() {
                 }}
               >
                 <LinkedinIcon size={18} />
-              </a>
-
-              <a
-                href="mailto:ajay872072@gmail.com"
-                aria-label="Email"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '8px',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border-color)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                <Mail size={18} />
               </a>
             </div>
 
