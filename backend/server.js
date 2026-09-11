@@ -10,6 +10,10 @@ import projectRoutes from './src/routes/projectRoutes.js';
 import certificateRoutes from './src/routes/certificateRoutes.js';
 import contactRoutes from './src/routes/contactRoutes.js';
 import resumeRoutes from './src/routes/resumeRoutes.js';
+import profileRoutes from './src/routes/profileRoutes.js';
+import educationRoutes from './src/routes/educationRoutes.js';
+import skillRoutes from './src/routes/skillRoutes.js';
+import experienceRoutes from './src/routes/experienceRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,6 +33,10 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/education', educationRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/experience', experienceRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/contact', contactRoutes);

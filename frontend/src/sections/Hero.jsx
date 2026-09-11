@@ -1,7 +1,31 @@
-import { ArrowDown, Mail, Code, Terminal, Database, Server, Download, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { getProfile } from '../services/api';
+import { Mail, Code, Terminal, Server, Download, ExternalLink } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../components/SocialIcons';
 
 export default function Hero() {
+  const [profile, setProfile] = useState({
+    name: 'Ajay Kumar D',
+    title: 'Aspiring Full-Stack Developer',
+    subtitle: 'Available for Full-Stack Opportunities',
+    bio: 'I build responsive web applications and practical software solutions using modern frontend, backend, database, and networking technologies.',
+    email: 'ajay872072@gmail.com',
+    githubUrl: 'https://github.com/Ajaykumar22062006',
+    linkedinUrl:
+      'https://www.linkedin.com/in/ajay-kumar-d-18377a292?utm_source=share_via&utm_content=profile&utm_medium=member_android',
+    statusText: 'Available for Full-Stack Opportunities',
+  });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const data = await getProfile();
+      if (data && typeof data === 'object' && data.name) {
+        setProfile((prev) => ({ ...prev, ...data }));
+      }
+    };
+    loadProfile();
+  }, []);
+
   return (
     <section id="home" style={{ paddingTop: '8.5rem', paddingBottom: '6rem', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
       <div className="container">
@@ -39,7 +63,7 @@ export default function Hero() {
                   boxShadow: '0 0 10px #10b981',
                 }}
               />
-              Available for Full-Stack Opportunities
+              {profile.statusText || profile.subtitle}
             </div>
 
             <h1
@@ -51,7 +75,7 @@ export default function Hero() {
                 marginBottom: '1rem',
               }}
             >
-              Hi, I'm <span className="gradient-text" style={{ whiteSpace: 'nowrap' }}>Ajay Kumar D</span>
+              Hi, I'm <span className="gradient-text" style={{ whiteSpace: 'nowrap' }}>{profile.name}</span>
             </h1>
 
             <h2
@@ -65,7 +89,7 @@ export default function Hero() {
                 gap: '0.5rem',
               }}
             >
-              <span style={{ color: 'var(--accent-cyan)' }}>&gt;</span> Aspiring Full-Stack Developer
+              <span style={{ color: 'var(--accent-cyan)' }}>&gt;</span> {profile.title}
             </h2>
 
             <p
@@ -77,7 +101,7 @@ export default function Hero() {
                 marginBottom: '2.25rem',
               }}
             >
-              I build responsive web applications and practical software solutions using modern frontend, backend, database, and networking technologies.
+              {profile.bio}
             </p>
 
             {/* Action Buttons */}
@@ -101,7 +125,7 @@ export default function Hero() {
 
               <div style={{ display: 'flex', gap: '0.75rem' }}>
                 <a
-                  href="https://github.com/Ajaykumar22062006"
+                  href={profile.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub Profile"
@@ -132,7 +156,7 @@ export default function Hero() {
                 </a>
 
                 <a
-                  href="https://www.linkedin.com/in/ajay-kumar-d-18377a292?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+                  href={profile.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn Profile"
@@ -163,7 +187,7 @@ export default function Hero() {
                 </a>
 
                 <a
-                  href="mailto:ajay872072@gmail.com"
+                  href={`mailto:${profile.email}`}
                   aria-label="Email Contact"
                   style={{
                     width: '42px',
@@ -194,7 +218,7 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Right Developer Terminal & Interactive Card Visual */}
+          {/* Right Developer Terminal Visual */}
           <div style={{ position: 'relative' }}>
             <div
               className="glass-card"
@@ -238,8 +262,8 @@ export default function Hero() {
                 }}
               >
                 <span style={{ color: '#c678dd' }}>const</span> <span style={{ color: '#61afef' }}>developer</span> = &#123;<br />
-                &nbsp;&nbsp;<span style={{ color: '#e06c75' }}>name</span>: <span style={{ color: '#98c379' }}>"Ajay Kumar D"</span>,<br />
-                &nbsp;&nbsp;<span style={{ color: '#e06c75' }}>role</span>: <span style={{ color: '#98c379' }}>"Aspiring Full-Stack Developer"</span>,<br />
+                &nbsp;&nbsp;<span style={{ color: '#e06c75' }}>name</span>: <span style={{ color: '#98c379' }}>"{profile.name}"</span>,<br />
+                &nbsp;&nbsp;<span style={{ color: '#e06c75' }}>role</span>: <span style={{ color: '#98c379' }}>"{profile.title}"</span>,<br />
                 &nbsp;&nbsp;<span style={{ color: '#e06c75' }}>techStack</span>: &#123;<br />
                 &nbsp;&nbsp;&nbsp;&nbsp;<span style={{ color: '#e06c75' }}>frontend</span>: [<span style={{ color: '#98c379' }}>"React.js"</span>, <span style={{ color: '#98c379' }}>"JavaScript"</span>, <span style={{ color: '#98c379' }}>"CSS3"</span>],<br />
                 &nbsp;&nbsp;&nbsp;&nbsp;<span style={{ color: '#e06c75' }}>backend</span>: [<span style={{ color: '#98c379' }}>"Python (Flask)"</span>, <span style={{ color: '#98c379' }}>"Node Express"</span>],<br />

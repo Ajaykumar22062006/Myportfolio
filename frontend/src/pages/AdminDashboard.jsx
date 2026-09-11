@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  getProfile,
+  updateProfile,
+  getEducation,
+  createEducation,
+  deleteEducation,
+  getSkills,
+  createSkill,
+  deleteSkill,
+  getExperience,
+  createExperience,
+  deleteExperience,
   getProjects,
   createProject,
   deleteProject,
@@ -13,17 +24,18 @@ import {
   uploadResume,
 } from '../services/api';
 import {
-  LayoutDashboard,
+  User,
+  GraduationCap,
+  Wrench,
   FolderPlus,
+  Briefcase,
   Award,
   MessageSquare,
   LogOut,
   Plus,
   Trash2,
-  Edit,
   Check,
   X,
-  ExternalLink,
   ArrowLeft,
   FileText,
   Upload,
@@ -32,13 +44,58 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('projects');
-  const [projectsList, setProjectsList] = useState([]);
-  const [certificatesList, setCertificatesList] = useState([]);
-  const [messagesList, setMessagesList] = useState([]);
+  const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);
 
-  // New Project Form Modal State
+  // States
+  const [profileData, setProfileData] = useState({
+    name: 'Ajay Kumar D',
+    title: 'Aspiring Full-Stack Developer',
+    subtitle: 'Available for Full-Stack Opportunities',
+    bio: 'I build responsive web applications and practical software solutions using modern frontend, backend, database, and networking technologies.',
+    email: 'ajay872072@gmail.com',
+    githubUrl: 'https://github.com/Ajaykumar22062006',
+    linkedinUrl:
+      'https://www.linkedin.com/in/ajay-kumar-d-18377a292?utm_source=share_via&utm_content=profile&utm_medium=member_android',
+    statusText: 'Available for Full-Stack Opportunities',
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState('');
+
+  const [educationList, setEducationList] = useState([]);
+  const [showEduModal, setShowEduModal] = useState(false);
+  const [newEdu, setNewEdu] = useState({
+    degree: '',
+    college: '',
+    university: '',
+    duration: '',
+    graduationYear: '',
+    status: 'In Progress',
+    highlights: '',
+  });
+
+  const [skillsList, setSkillsList] = useState([]);
+  const [showSkillModal, setShowSkillModal] = useState(false);
+  const [newSkill, setNewSkill] = useState({
+    name: '',
+    category: 'Frontend',
+    level: 'Core',
+  });
+
+  const [experienceList, setExperienceList] = useState([]);
+  const [showExpModal, setShowExpModal] = useState(false);
+  const [newExp, setNewExp] = useState({
+    role: '',
+    company: '',
+    location: '',
+    period: '',
+    type: 'Industry Internship',
+    description: '',
+    highlights: '',
+    skills: '',
+  });
+
+  const [projectsList, setProjectsList] = useState([]);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [newProject, setNewProject] = useState({
     title: '',
@@ -53,7 +110,7 @@ export default function AdminDashboard() {
     liveUrl: '',
   });
 
-  // New Certificate Form Modal State
+  const [certificatesList, setCertificatesList] = useState([]);
   const [showCertModal, setShowCertModal] = useState(false);
   const [newCert, setNewCert] = useState({
     title: '',
@@ -64,9 +121,8 @@ export default function AdminDashboard() {
     skills: '',
     certificateImage: '',
   });
-  const [certParsingMsg, setCertParsingMsg] = useState('');
-  const [certUploading, setCertUploading] = useState(false);
-  const [certErrorMsg, setCertErrorMsg] = useState('');
+
+  const [messagesList, setMessagesList] = useState([]);
 
   // Resume Upload State
   const [currentResume, setCurrentResume] = useState(null);
@@ -90,84 +146,34 @@ export default function AdminDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [projData, certData, resData] = await Promise.all([
+      const [prof, edu, sk, exp, proj, cert, res] = await Promise.all([
+        getProfile(),
+        getEducation(),
+        getSkills(),
+        getExperience(),
         getProjects(),
         getCertificates(),
         getResume(),
       ]);
-      setProjectsList(Array.isArray(projData) ? projData : []);
-      setCertificatesList(Array.isArray(certData) ? certData : []);
-      setCurrentResume(resData && typeof resData === 'object' && !resData.message ? resData : null);
+
+      if (prof && typeof prof === 'object' && prof.name) setProfileData(prof);
+      setEducationList(Array.isArray(edu) ? edu : []);
+      setSkillsList(Array.isArray(sk) ? sk : []);
+      setExperienceList(Array.isArray(exp) ? exp : []);
+      setProjectsList(Array.isArray(proj) ? proj : []);
+      setCertificatesList(Array.isArray(cert) ? cert : []);
+      setCurrentResume(res && typeof res === 'object' && !res.message ? res : null);
 
       try {
         const msgs = await getContactMessages();
         setMessagesList(Array.isArray(msgs) ? msgs : []);
       } catch (err) {
-        console.warn('Contact messages fetch error (requires admin backend token):', err);
         setMessagesList([]);
       }
     } catch (err) {
       console.error('Error loading dashboard data:', err);
-      setProjectsList([]);
-      setCertificatesList([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResumeFileChange = (e) => {
-    const file = e.target.files[0];
-    setResumeSuccessMsg('');
-    setResumeErrorMsg('');
-
-    if (!file) {
-      setSelectedResumeFile(null);
-      setResumeBase64('');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setResumeErrorMsg('File size exceeds 10MB limit.');
-      return;
-    }
-
-    setSelectedResumeFile(file);
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      setResumeBase64(uploadEvent.target.result);
-    };
-    reader.onerror = (err) => {
-      setResumeErrorMsg('Failed to read file contents');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleResumeUpload = async (e) => {
-    e.preventDefault();
-    if (!selectedResumeFile || !resumeBase64) {
-      setResumeErrorMsg('Please select a valid resume file to upload.');
-      return;
-    }
-
-    setResumeUploading(true);
-    setResumeSuccessMsg('');
-    setResumeErrorMsg('');
-
-    try {
-      const res = await uploadResume({
-        filename: selectedResumeFile.name,
-        fileType: selectedResumeFile.type || 'application/pdf',
-        base64Content: resumeBase64,
-      });
-
-      setResumeSuccessMsg(res.message || 'Resume uploaded and stored in database as Base64!');
-      setCurrentResume(res.data);
-      setSelectedResumeFile(null);
-      setResumeBase64('');
-    } catch (err) {
-      setResumeErrorMsg(typeof err === 'string' ? err : 'Failed to upload resume to database.');
-    } finally {
-      setResumeUploading(false);
     }
   };
 
@@ -176,32 +182,108 @@ export default function AdminDashboard() {
     navigate('/admin');
   };
 
+  // Profile Update
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileMsg('');
+    try {
+      await updateProfile(profileData);
+      setProfileMsg('Profile updated successfully!');
+    } catch (err) {
+      alert('Failed to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  // Education CRUD
+  const handleAddEducation = async (e) => {
+    e.preventDefault();
+    try {
+      await createEducation(newEdu);
+      setShowEduModal(false);
+      setNewEdu({ degree: '', college: '', university: '', duration: '', graduationYear: '', status: 'In Progress', highlights: '' });
+      loadDashboardData();
+    } catch (err) {
+      alert('Failed to add education');
+    }
+  };
+
+  const handleDeleteEducation = async (id) => {
+    if (window.confirm('Delete this education entry?')) {
+      try {
+        await deleteEducation(id);
+        loadDashboardData();
+      } catch (err) {
+        alert('Failed to delete education');
+      }
+    }
+  };
+
+  // Skill CRUD
+  const handleAddSkill = async (e) => {
+    e.preventDefault();
+    try {
+      await createSkill(newSkill);
+      setShowSkillModal(false);
+      setNewSkill({ name: '', category: 'Frontend', level: 'Core' });
+      loadDashboardData();
+    } catch (err) {
+      alert('Failed to add skill');
+    }
+  };
+
+  const handleDeleteSkill = async (id) => {
+    if (window.confirm('Delete this skill?')) {
+      try {
+        await deleteSkill(id);
+        loadDashboardData();
+      } catch (err) {
+        alert('Failed to delete skill');
+      }
+    }
+  };
+
+  // Experience CRUD
+  const handleAddExperience = async (e) => {
+    e.preventDefault();
+    try {
+      await createExperience(newExp);
+      setShowExpModal(false);
+      setNewExp({ role: '', company: '', location: '', period: '', type: 'Industry Internship', description: '', highlights: '', skills: '' });
+      loadDashboardData();
+    } catch (err) {
+      alert('Failed to add experience');
+    }
+  };
+
+  const handleDeleteExperience = async (id) => {
+    if (window.confirm('Delete this experience entry?')) {
+      try {
+        await deleteExperience(id);
+        loadDashboardData();
+      } catch (err) {
+        alert('Failed to delete experience');
+      }
+    }
+  };
+
+  // Project CRUD
   const handleAddProject = async (e) => {
     e.preventDefault();
     try {
-      const formattedTech = newProject.technologies.split(',').map((t) => t.trim());
-      await createProject({ ...newProject, technologies: formattedTech });
+      await createProject(newProject);
       setShowProjectModal(false);
-      setNewProject({
-        title: '',
-        category: 'Full Stack',
-        type: 'Software Project',
-        organization: '',
-        duration: '',
-        period: '',
-        description: '',
-        technologies: '',
-        githubUrl: '',
-        liveUrl: '',
-      });
+      setNewProject({ title: '', category: 'Full Stack', type: 'Software Project', organization: '', duration: '', period: '', description: '', technologies: '', githubUrl: '', liveUrl: '' });
       loadDashboardData();
     } catch (err) {
       alert('Failed to add project');
     }
   };
 
-  const handleDeleteProjectItem = async (id) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
+  const handleDeleteProject = async (id) => {
+    if (window.confirm('Delete this project?')) {
       try {
         await deleteProject(id);
         loadDashboardData();
@@ -211,183 +293,33 @@ export default function AdminDashboard() {
     }
   };
 
-  // Compress high-res certificate photos client-side to clean ~150-300KB JPEG
-  const compressCertImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
-            }
-          } else {
-            if (height > maxHeight) {
-              width = Math.round((width * maxHeight) / height);
-              height = maxHeight;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.onerror = () => resolve(e.target.result);
-        img.src = e.target.result;
-      };
-      reader.onerror = () => resolve('');
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleCertPhotoSelect = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setCertParsingMsg('Reading & optimizing certificate photo quality...');
-    try {
-      const compressedBase64 = await compressCertImage(file);
-      const nameLower = file.name.toLowerCase();
-
-      let detectedTitle = 'Certificate of Course Completion';
-      let detectedSubtitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-      let detectedOrg = 'Cisco Networking Academy';
-      let detectedDate = '2026';
-      let detectedType = 'cisco';
-      let detectedSkills = 'Networking, Communication, Protocols, Troubleshooting';
-
-      if (nameLower.includes('hostel') || nameLower.includes('tcs') || nameLower.includes('aip')) {
-        detectedTitle = 'Certificate of Industry Project';
-        detectedSubtitle = 'University Hostel Management System';
-        detectedOrg = 'TCS iON Applied Industry Projects (AIP)';
-        detectedDate = '08 May 2026';
-        detectedType = 'tcs_ion';
-        detectedSkills = 'Hostel Operations, Software System Architecture, Database Management';
-      } else if (nameLower.includes('cisco') || nameLower.includes('network')) {
-        detectedTitle = 'Certificate of Course Completion';
-        detectedSubtitle = 'Networking Basics';
-        detectedOrg = 'Cisco Networking Academy';
-        detectedDate = '13 August 2026';
-        detectedType = 'cisco';
-        detectedSkills = 'Network communication, Ethernet, IPv4, IPv6, Routing, Network troubleshooting';
-      } else if (nameLower.includes('infosys') || nameLower.includes('sql') || nameLower.includes('oracle')) {
-        detectedTitle = 'Course Completion Certificate';
-        detectedSubtitle = 'Learn SQL For Oracle Databases – Using Toad From Scratch';
-        detectedOrg = 'Infosys Springboard';
-        detectedDate = '11 June 2025';
-        detectedType = 'infosys';
-        detectedSkills = 'SQL Query Writing, Oracle Database, Toad IDE, Schema Design';
-      } else {
-        detectedSubtitle = detectedSubtitle
-          .split(' ')
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(' ');
-      }
-
-      setNewCert((prev) => ({
-        ...prev,
-        title: detectedTitle,
-        subtitle: detectedSubtitle,
-        organization: detectedOrg,
-        issueDate: detectedDate,
-        type: detectedType,
-        skills: detectedSkills,
-        certificateImage: compressedBase64,
-      }));
-
-      setCertParsingMsg('✨ Photo read & optimized! Details auto-filled in the form below.');
-    } catch (err) {
-      console.error('Error processing photo:', err);
-      setCertParsingMsg('⚠️ Failed to optimize photo. Please enter details manually.');
-    }
-  };
-
-  const handleOpenCertModal = () => {
-    setActiveTab('certificates');
-    setCertErrorMsg('');
-    setCertParsingMsg('');
-    setShowCertModal(true);
-  };
-
-  const handleAddCert = async (e) => {
+  // Certificate CRUD
+  const handleAddCertificate = async (e) => {
     e.preventDefault();
-    setCertUploading(true);
-    setCertErrorMsg('');
-
     try {
-      const formattedSkills = typeof newCert.skills === 'string'
-        ? newCert.skills.split(',').map((s) => s.trim()).filter(Boolean)
-        : (newCert.skills || []);
-
-      const payload = {
-        title: newCert.title || 'Certificate of Completion',
-        subtitle: newCert.subtitle || 'Software Development & Networking',
-        organization: newCert.organization || 'Verified Credential',
-        issueDate: newCert.issueDate || '2026',
-        type: newCert.type || 'cisco',
-        skills: formattedSkills,
-        certificateImage: newCert.certificateImage || '',
-      };
-
-      const res = await createCertificate(payload);
-
-      // Optimistically insert new certificate into local list state
-      if (res && typeof res === 'object') {
-        setCertificatesList((prev) => [res, ...(Array.isArray(prev) ? prev : [])]);
-      }
-
+      await createCertificate(newCert);
       setShowCertModal(false);
-      setNewCert({
-        title: '',
-        subtitle: '',
-        organization: '',
-        issueDate: '',
-        type: 'cisco',
-        skills: '',
-        certificateImage: '',
-      });
-      setCertParsingMsg('');
-      await loadDashboardData();
+      setNewCert({ title: '', subtitle: '', organization: '', issueDate: '', type: 'cisco', skills: '', certificateImage: '' });
+      loadDashboardData();
     } catch (err) {
-      console.error('Add certificate error:', err);
-      const msg = err.response?.data?.message || (typeof err === 'string' ? err : err.message) || 'Failed to save certificate to server.';
-      setCertErrorMsg(msg);
-    } finally {
-      setCertUploading(false);
+      alert('Failed to add certificate');
     }
   };
 
-  const handleDeleteCertItem = async (certItem) => {
-    const certId = typeof certItem === 'object' ? certItem._id || certItem.id : certItem;
-    if (!certId) {
-      alert('Error: Certificate ID not found.');
-      return;
-    }
-    if (window.confirm('Are you sure you want to delete this certificate?')) {
+  const handleDeleteCertificate = async (id) => {
+    if (window.confirm('Delete this certificate?')) {
       try {
-        await deleteCertificate(certId);
-        // Optimistically update list state immediately
-        setCertificatesList((prev) => prev.filter((c) => (c._id || c.id) !== certId));
+        await deleteCertificate(id);
         loadDashboardData();
       } catch (err) {
-        console.error('Delete certificate error:', err);
-        alert('Failed to delete certificate: ' + (typeof err === 'string' ? err : err.message || 'Error deleting certificate'));
+        alert('Failed to delete certificate');
       }
     }
   };
 
-  const handleDeleteMsg = async (id) => {
-    if (window.confirm('Delete message?')) {
+  // Messages CRUD
+  const handleDeleteMessage = async (id) => {
+    if (window.confirm('Delete this message?')) {
       try {
         await deleteContactMessage(id);
         loadDashboardData();
@@ -397,745 +329,506 @@ export default function AdminDashboard() {
     }
   };
 
-  return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
-      {/* Admin Navbar */}
-      <header
-        style={{
-          backgroundColor: 'var(--bg-secondary)',
-          borderBottom: '1px solid var(--border-color)',
-          padding: '1rem 2rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <a href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <ArrowLeft size={18} />
-            <span>View Live Site</span>
-          </a>
-          <span style={{ color: 'var(--border-color)' }}>|</span>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <LayoutDashboard size={20} style={{ color: 'var(--accent-cyan)' }} />
-            <span>Admin Control Panel</span>
-          </h1>
-        </div>
+  // Resume Upload
+  const handleResumeFileChange = (e) => {
+    const file = e.target.files[0];
+    setResumeSuccessMsg('');
+    setResumeErrorMsg('');
+    if (!file) return;
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button onClick={handleOpenCertModal} className="btn btn-primary btn-sm">
-            <Plus size={16} />
-            <span>Add Certificate</span>
-          </button>
-          <button onClick={handleLogout} className="btn btn-outline btn-sm">
-            <LogOut size={16} />
+    const validTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+    ];
+    if (!validTypes.includes(file.type)) {
+      setResumeErrorMsg('Please select a valid PDF, DOCX, or TXT document');
+      return;
+    }
+
+    setSelectedResumeFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setResumeBase64(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUploadResumeSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedResumeFile || !resumeBase64) {
+      setResumeErrorMsg('Please select a document file to upload');
+      return;
+    }
+    setResumeUploading(true);
+    setResumeErrorMsg('');
+    try {
+      const res = await uploadResume({
+        filename: selectedResumeFile.name,
+        fileType: selectedResumeFile.type,
+        base64Content: resumeBase64,
+      });
+      setCurrentResume(res.resume || res);
+      setResumeSuccessMsg('Resume updated & saved successfully!');
+      setSelectedResumeFile(null);
+      setResumeBase64('');
+    } catch (err) {
+      setResumeErrorMsg('Failed to upload resume document');
+    } finally {
+      setResumeUploading(false);
+    }
+  };
+
+  return (
+    <div style={{ backgroundColor: 'var(--bg-primary)', minHeight: '100vh', color: 'var(--text-primary)', padding: '2rem 1rem' }}>
+      <div className="container">
+        {/* Header Bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <a href="/" style={{ color: 'var(--accent-cyan)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', marginBottom: '0.5rem', fontWeight: 600 }}>
+              <ArrowLeft size={16} />
+              <span>Back to Portfolio Website</span>
+            </a>
+            <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>Admin Management Portal</h1>
+          </div>
+
+          <button onClick={handleLogout} className="btn btn-outline" style={{ borderColor: 'rgba(244, 63, 94, 0.4)', color: '#f43f5e' }}>
+            <LogOut size={18} />
             <span>Logout</span>
           </button>
         </div>
-      </header>
 
-      <div className="container" style={{ padding: '2.5rem 1.5rem' }}>
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-          <button
-            onClick={() => setActiveTab('projects')}
-            style={{
-              padding: '0.6rem 1.25rem',
-              borderRadius: '0.5rem',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: activeTab === 'projects' ? 'var(--accent-cyan)' : 'transparent',
-              color: activeTab === 'projects' ? '#ffffff' : 'var(--text-secondary)',
-            }}
-          >
-            <FolderPlus size={18} />
-            <span>Projects ({projectsList.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('certificates')}
-            style={{
-              padding: '0.6rem 1.25rem',
-              borderRadius: '0.5rem',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: activeTab === 'certificates' ? 'var(--accent-cyan)' : 'transparent',
-              color: activeTab === 'certificates' ? '#ffffff' : 'var(--text-secondary)',
-            }}
-          >
-            <Award size={18} />
-            <span>Certificates ({certificatesList.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('messages')}
-            style={{
-              padding: '0.6rem 1.25rem',
-              borderRadius: '0.5rem',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: activeTab === 'messages' ? 'var(--accent-cyan)' : 'transparent',
-              color: activeTab === 'messages' ? '#ffffff' : 'var(--text-secondary)',
-            }}
-          >
-            <MessageSquare size={18} />
-            <span>Messages ({messagesList.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('resume')}
-            style={{
-              padding: '0.6rem 1.25rem',
-              borderRadius: '0.5rem',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              backgroundColor: activeTab === 'resume' ? 'var(--accent-cyan)' : 'transparent',
-              color: activeTab === 'resume' ? '#ffffff' : 'var(--text-secondary)',
-            }}
-          >
-            <FileText size={18} />
-            <span>Resume Upload</span>
-          </button>
+        <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1rem', marginBottom: '2rem' }}>
+          {[
+            { id: 'profile', label: 'Profile & Bio', icon: <User size={18} /> },
+            { id: 'education', label: 'Education', icon: <GraduationCap size={18} /> },
+            { id: 'skills', label: 'Skills', icon: <Wrench size={18} /> },
+            { id: 'projects', label: 'Projects', icon: <FolderPlus size={18} /> },
+            { id: 'experience', label: 'Experience', icon: <Briefcase size={18} /> },
+            { id: 'certificates', label: 'Courses & Certs', icon: <Award size={18} /> },
+            { id: 'resume', label: 'Resume Document', icon: <FileText size={18} /> },
+            { id: 'messages', label: `Messages (${messagesList.length})`, icon: <MessageSquare size={18} /> },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem 1.25rem',
+                borderRadius: '0.6rem',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                border: activeTab === tab.id ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                backgroundColor: activeTab === tab.id ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-card)',
+                color: activeTab === tab.id ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* PROJECTS MANAGEMENT TAB */}
-        {activeTab === 'projects' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                Manage Portfolio Projects
-              </h2>
-              <button onClick={() => setShowProjectModal(true)} className="btn btn-primary btn-sm">
-                <Plus size={16} />
-                <span>Add New Project</span>
-              </button>
-            </div>
+        {/* Content Tabs */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>Loading management portal data...</div>
+        ) : (
+          <>
+            {/* 1. Profile & Bio Tab */}
+            {activeTab === 'profile' && (
+              <div className="glass-card" style={{ padding: '2.5rem', maxWidth: '800px' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <User size={22} style={{ color: 'var(--accent-cyan)' }} />
+                  <span>Edit Profile & Bio Information</span>
+                </h2>
 
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {projectsList.map((p) => (
-                <div
-                  key={p._id}
-                  className="glass-card"
-                  style={{
-                    padding: '1.25rem 1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '1rem',
-                  }}
-                >
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {p.title}
-                    </h3>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Category: <span style={{ color: 'var(--accent-cyan)' }}>{p.category}</span> | Type: {p.type || 'N/A'}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={() => handleDeleteProjectItem(p._id)}
-                      style={{
-                        padding: '0.5rem',
-                        borderRadius: '0.4rem',
-                        background: 'rgba(239, 68, 68, 0.15)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        color: '#ef4444',
-                        cursor: 'pointer',
-                      }}
-                      aria-label="Delete Project"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* CERTIFICATES MANAGEMENT TAB */}
-        {activeTab === 'certificates' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                Manage Certificates
-              </h2>
-              <button onClick={handleOpenCertModal} className="btn btn-primary btn-sm">
-                <Plus size={16} />
-                <span>Add Certificate</span>
-              </button>
-            </div>
-
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {certificatesList.map((c) => (
-                <div
-                  key={c._id}
-                  className="glass-card"
-                  style={{
-                    padding: '1.25rem 1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '1rem',
-                  }}
-                >
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {c.title} - {c.subtitle}
-                    </h3>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Organization: {c.organization} | Issued: {c.issueDate}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleDeleteCertItem(c)}
-                    style={{
-                      padding: '0.5rem',
-                      borderRadius: '0.4rem',
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      color: '#ef4444',
-                      cursor: 'pointer',
-                    }}
-                    aria-label="Delete Certificate"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* MESSAGES TAB */}
-        {activeTab === 'messages' && (
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '1.5rem' }}>
-              Contact Messages
-            </h2>
-
-            {messagesList.length === 0 ? (
-              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                No contact messages received yet.
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gap: '1rem' }}>
-                {messagesList.map((msg) => (
-                  <div key={msg._id} className="glass-card" style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)' }}>
-                          {msg.name} ({msg.email})
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)' }}>
-                          Subject: {msg.subject}
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => handleDeleteMsg(msg._id)}
-                        style={{
-                          padding: '0.4rem',
-                          borderRadius: '0.4rem',
-                          background: 'rgba(239, 68, 68, 0.15)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          color: '#ef4444',
-                          cursor: 'pointer',
-                          height: 'fit-content',
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                    <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                      {msg.message}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* RESUME TAB */}
-        {activeTab === 'resume' && (
-          <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-              Upload Resume (Stored in Database as Base64)
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginBottom: '2rem' }}>
-              Upload your official resume file (PDF, DOCX, or TXT). It will be encoded as Base64 and stored directly inside your MongoDB database.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
-              {/* File Upload Box */}
-              <div className="glass-card" style={{ padding: '2rem' }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Upload size={20} style={{ color: 'var(--accent-cyan)' }} />
-                  <span>Select & Upload File</span>
-                </h3>
-
-                {resumeSuccessMsg && (
-                  <div
-                    style={{
-                      background: 'rgba(16, 185, 129, 0.15)',
-                      border: '1px solid rgba(16, 185, 129, 0.4)',
-                      color: '#10b981',
-                      padding: '0.85rem 1rem',
-                      borderRadius: '0.5rem',
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '1.25rem',
-                    }}
-                  >
-                    <CheckCircle2 size={18} />
-                    <span>{resumeSuccessMsg}</span>
+                {profileMsg && (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '0.85rem 1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                    {profileMsg}
                   </div>
                 )}
 
-                {resumeErrorMsg && (
-                  <div
-                    style={{
-                      background: 'rgba(244, 63, 94, 0.15)',
-                      border: '1px solid rgba(244, 63, 94, 0.4)',
-                      color: '#f43f5e',
-                      padding: '0.85rem 1rem',
-                      borderRadius: '0.5rem',
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      marginBottom: '1.25rem',
-                    }}
-                  >
-                    {resumeErrorMsg}
-                  </div>
-                )}
-
-                <form onSubmit={handleResumeUpload}>
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label
-                      htmlFor="resume-file-input"
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '2.5rem 1.5rem',
-                        border: '2px dashed var(--border-color)',
-                        borderRadius: '0.75rem',
-                        backgroundColor: 'var(--bg-secondary)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-cyan)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
-                    >
-                      <Upload size={36} style={{ color: 'var(--accent-cyan)', marginBottom: '0.75rem' }} />
-                      <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        Click to browse file
-                      </span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                        Supports PDF, DOCX, TXT (Max 10MB)
-                      </span>
-                    </label>
-
+                <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.4rem' }}>Full Name</label>
                     <input
-                      id="resume-file-input"
-                      type="file"
-                      accept=".pdf,.doc,.docx,.txt"
-                      onChange={handleResumeFileChange}
-                      style={{ display: 'none' }}
+                      type="text"
+                      value={profileData.name}
+                      onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                     />
                   </div>
 
-                  {selectedResumeFile && (
-                    <div
-                      style={{
-                        background: 'rgba(56, 189, 248, 0.08)',
-                        border: '1px solid rgba(56, 189, 248, 0.25)',
-                        padding: '1rem',
-                        borderRadius: '0.5rem',
-                        marginBottom: '1.5rem',
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--accent-cyan)' }}>
-                        Selected File: {selectedResumeFile.name}
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        Size: {(selectedResumeFile.size / 1024).toFixed(1)} KB | Type: {selectedResumeFile.type || 'Document'}
-                      </div>
-                    </div>
-                  )}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.4rem' }}>Professional Title</label>
+                    <input
+                      type="text"
+                      value={profileData.title}
+                      onChange={(e) => setProfileData({ ...profileData, title: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={!selectedResumeFile || resumeUploading}
-                    className="btn btn-primary"
-                    style={{ width: '100%', padding: '0.85rem' }}
-                  >
-                    {resumeUploading ? (
-                      <span>Encoding & Saving to DB...</span>
-                    ) : (
-                      <>
-                        <Upload size={18} />
-                        <span>Save Resume to MongoDB (Base64)</span>
-                      </>
-                    )}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.4rem' }}>Status / Availability Badge</label>
+                    <input
+                      type="text"
+                      value={profileData.statusText || profileData.subtitle}
+                      onChange={(e) => setProfileData({ ...profileData, statusText: e.target.value, subtitle: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.4rem' }}>Hero Bio Summary</label>
+                    <textarea
+                      rows="3"
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.4rem' }}>Email Address</label>
+                    <input
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.4rem' }}>GitHub Profile Link</label>
+                      <input
+                        type="url"
+                        value={profileData.githubUrl}
+                        onChange={(e) => setProfileData({ ...profileData, githubUrl: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.4rem' }}>LinkedIn Profile Link</label>
+                      <input
+                        type="url"
+                        value={profileData.linkedinUrl}
+                        onChange={(e) => setProfileData({ ...profileData, linkedinUrl: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={profileSaving} className="btn btn-primary" style={{ padding: '0.85rem', marginTop: '1rem' }}>
+                    {profileSaving ? 'Saving...' : 'Save Profile Changes'}
                   </button>
                 </form>
               </div>
+            )}
 
-              {/* Current Active Resume Details Card */}
-              <div className="glass-card" style={{ padding: '2rem' }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FileCheck size={20} style={{ color: '#10b981' }} />
-                  <span>Current Resume in Database</span>
-                </h3>
+            {/* 2. Education Tab */}
+            {activeTab === 'education' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Education Records</h2>
+                  <button onClick={() => setShowEduModal(true)} className="btn btn-primary btn-sm">
+                    <Plus size={16} />
+                    <span>Add Education</span>
+                  </button>
+                </div>
 
-                {currentResume ? (
-                  <div>
-                    <div
-                      style={{
-                        padding: '1.25rem',
-                        borderRadius: '0.75rem',
-                        backgroundColor: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-color)',
-                        marginBottom: '1.5rem',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                        <FileText size={24} style={{ color: 'var(--accent-cyan)' }} />
-                        <div>
-                          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                            {currentResume.filename}
-                          </div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            File Type: {currentResume.fileType}
-                          </div>
-                        </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {educationList.map((edu) => (
+                    <div key={edu._id || edu.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{edu.degree}</h3>
+                        <div style={{ color: 'var(--accent-cyan)', fontSize: '0.9rem' }}>{edu.college} • {edu.university}</div>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Duration: {edu.duration} | Status: {edu.status}</div>
                       </div>
-
-                      <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                        Uploaded: {new Date(currentResume.updatedAt).toLocaleString()}
-                      </div>
-
-                      <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        Base64 preview: {currentResume.base64Content?.substring(0, 50)}...
-                      </div>
+                      <button onClick={() => handleDeleteEducation(edu._id || edu.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
+                        <Trash2 size={16} />
+                      </button>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    <a
-                      href={currentResume.base64Content}
-                      download={currentResume.filename}
-                      className="btn btn-outline"
-                      style={{ width: '100%', textAlign: 'center' }}
-                    >
-                      <FileText size={18} />
-                      <span>Download Base64 Resume</span>
-                    </a>
+            {/* 3. Skills Tab */}
+            {activeTab === 'skills' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Technical Skills</h2>
+                  <button onClick={() => setShowSkillModal(true)} className="btn btn-primary btn-sm">
+                    <Plus size={16} />
+                    <span>Add Skill</span>
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                  {skillsList.map((skill) => (
+                    <div key={skill._id || skill.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700, textTransform: 'uppercase' }}>{skill.category}</span>
+                        <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>{skill.name}</h4>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Level: {skill.level || 'Core'}</span>
+                      </div>
+                      <button onClick={() => handleDeleteSkill(skill._id || skill.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 4. Projects Tab */}
+            {activeTab === 'projects' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Projects</h2>
+                  <button onClick={() => setShowProjectModal(true)} className="btn btn-primary btn-sm">
+                    <Plus size={16} />
+                    <span>Add Project</span>
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {projectsList.map((proj) => (
+                    <div key={proj._id || proj.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>{proj.category}</span>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{proj.title}</h3>
+                        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>{proj.description}</p>
+                      </div>
+                      <button onClick={() => handleDeleteProject(proj._id || proj.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 5. Experience Tab */}
+            {activeTab === 'experience' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Experience Records</h2>
+                  <button onClick={() => setShowExpModal(true)} className="btn btn-primary btn-sm">
+                    <Plus size={16} />
+                    <span>Add Experience</span>
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {experienceList.map((exp) => (
+                    <div key={exp._id || exp.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{exp.role}</h3>
+                        <div style={{ color: 'var(--accent-cyan)', fontSize: '0.9rem' }}>{exp.company} • {exp.period}</div>
+                        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>{exp.description}</p>
+                      </div>
+                      <button onClick={() => handleDeleteExperience(exp._id || exp.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. Courses & Certificates Tab */}
+            {activeTab === 'certificates' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Courses & Certificates</h2>
+                  <button onClick={() => setShowCertModal(true)} className="btn btn-primary btn-sm">
+                    <Plus size={16} />
+                    <span>Add Certificate</span>
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {certificatesList.map((cert) => (
+                    <div key={cert._id || cert.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>{cert.organization}</span>
+                        <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{cert.subtitle || cert.title}</h3>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Issued: {cert.issueDate}</div>
+                      </div>
+                      <button onClick={() => handleDeleteCertificate(cert._id || cert.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 7. Resume Document Tab */}
+            {activeTab === 'resume' && (
+              <div className="glass-card" style={{ padding: '2.5rem', maxWidth: '750px' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Upload size={22} style={{ color: 'var(--accent-cyan)' }} />
+                  <span>Upload & Update Resume File</span>
+                </h2>
+
+                {resumeSuccessMsg && (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '0.85rem 1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                    {resumeSuccessMsg}
                   </div>
+                )}
+
+                <form onSubmit={handleUploadResumeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  <input type="file" onChange={handleResumeFileChange} accept=".pdf,.docx,.txt" style={{ padding: '0.75rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+                  {selectedResumeFile && <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)' }}>Selected: {selectedResumeFile.name}</div>}
+                  <button type="submit" disabled={resumeUploading} className="btn btn-primary" style={{ padding: '0.85rem' }}>
+                    {resumeUploading ? 'Uploading...' : 'Save & Replace Resume'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* 8. Messages Tab */}
+            {activeTab === 'messages' && (
+              <div>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.5rem' }}>Visitor Messages ({messagesList.length})</h2>
+                {messagesList.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>No contact messages received yet.</div>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                    No custom resume uploaded to MongoDB yet. Users will see generated resume until an official file is uploaded.
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {messagesList.map((msg) => (
+                      <div key={msg._id || msg.id} className="glass-card" style={{ padding: '1.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                          <div>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{msg.name} ({msg.email})</h3>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>Subject: {msg.subject}</div>
+                          </div>
+                          <button onClick={() => handleDeleteMessage(msg._id || msg.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e' }}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                        <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{msg.message}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* ADD PROJECT MODAL */}
-      {showProjectModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '1.5rem',
-          }}
-        >
-          <div className="glass-card" style={{ width: '100%', maxWidth: '550px', padding: '2rem', borderRadius: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add New Project</h3>
-              <button onClick={() => setShowProjectModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                <X size={20} />
-              </button>
+      {/* Education Modal */}
+      {showEduModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add New Education Record</h3>
+              <button onClick={() => setShowEduModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
             </div>
-
-            <form onSubmit={handleAddProject}>
-              <input
-                type="text"
-                placeholder="Project Title"
-                required
-                value={newProject.title}
-                onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', marginBottom: '1rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-              />
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <select
-                  value={newProject.category}
-                  onChange={(e) => setNewProject({ ...newProject, category: e.target.value })}
-                  style={{ padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                >
-                  <option value="Frontend">Frontend</option>
-                  <option value="Backend">Backend</option>
-                  <option value="Full Stack">Full Stack</option>
-                  <option value="Networking">Networking</option>
-                </select>
-
-                <input
-                  type="text"
-                  placeholder="Organization (e.g. TCS iON)"
-                  value={newProject.organization}
-                  onChange={(e) => setNewProject({ ...newProject, organization: e.target.value })}
-                  style={{ padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-                />
-              </div>
-
-              <textarea
-                placeholder="Project Description"
-                rows="3"
-                required
-                value={newProject.description}
-                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', marginBottom: '1rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-              />
-
-              <input
-                type="text"
-                placeholder="Technologies (comma separated: React, Python, Flask)"
-                value={newProject.technologies}
-                onChange={(e) => setNewProject({ ...newProject, technologies: e.target.value })}
-                style={{ width: '100%', padding: '0.65rem', marginBottom: '1.5rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-              />
-
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="button" onClick={() => setShowProjectModal(false)} className="btn btn-outline" style={{ width: '50%' }}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" style={{ width: '50%' }}>
-                  Save Project
-                </button>
-              </div>
+            <form onSubmit={handleAddEducation} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input type="text" placeholder="Degree (e.g. B.Tech)" required value={newEdu.degree} onChange={(e) => setNewEdu({ ...newEdu, degree: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="College Name" required value={newEdu.college} onChange={(e) => setNewEdu({ ...newEdu, college: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="University Name" value={newEdu.university} onChange={(e) => setNewEdu({ ...newEdu, university: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Duration (e.g. 2023 – 2027)" required value={newEdu.duration} onChange={(e) => setNewEdu({ ...newEdu, duration: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Status (e.g. In Progress)" value={newEdu.status} onChange={(e) => setNewEdu({ ...newEdu, status: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <textarea placeholder="Highlights (one per line)" rows="3" value={newEdu.highlights} onChange={(e) => setNewEdu({ ...newEdu, highlights: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Education</button>
             </form>
           </div>
         </div>
       )}
 
-      {/* ADD CERTIFICATE MODAL */}
-      {showCertModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '1.5rem',
-          }}
-        >
-          <div className="glass-card" style={{ width: '100%', maxWidth: '550px', padding: '2rem', borderRadius: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>Add New Certificate</h3>
-              <button onClick={() => setShowCertModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                <X size={20} />
-              </button>
+      {/* Skill Modal */}
+      {showSkillModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '500px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add New Technical Skill</h3>
+              <button onClick={() => setShowSkillModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
             </div>
+            <form onSubmit={handleAddSkill} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input type="text" placeholder="Skill Name (e.g. React.js)" required value={newSkill.name} onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <select value={newSkill.category} onChange={(e) => setNewSkill({ ...newSkill, category: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                <option value="Frontend">Frontend Development</option>
+                <option value="Backend">Backend Development</option>
+                <option value="Database">Database Management</option>
+                <option value="Networking">Networking & Protocols</option>
+                <option value="Tools">Development Tools</option>
+              </select>
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Skill</button>
+            </form>
+          </div>
+        </div>
+      )}
 
-            <form onSubmit={handleAddCert}>
-              {certErrorMsg && (
-                <div
-                  style={{
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    color: '#ef4444',
-                    padding: '0.6rem 0.85rem',
-                    borderRadius: '0.4rem',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    marginBottom: '1rem',
-                  }}
-                >
-                  {certErrorMsg}
-                </div>
-              )}
+      {/* Experience Modal */}
+      {showExpModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add Experience / Internship</h3>
+              <button onClick={() => setShowExpModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddExperience} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input type="text" placeholder="Role Title (e.g. Full-Stack Developer Intern)" required value={newExp.role} onChange={(e) => setNewExp({ ...newExp, role: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Company / Organization" required value={newExp.company} onChange={(e) => setNewExp({ ...newExp, company: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Period (e.g. Feb 2026 – May 2026)" required value={newExp.period} onChange={(e) => setNewExp({ ...newExp, period: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <textarea placeholder="Description summary" rows="3" required value={newExp.description} onChange={(e) => setNewExp({ ...newExp, description: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <textarea placeholder="Highlights (one bullet point per line)" rows="3" value={newExp.highlights} onChange={(e) => setNewExp({ ...newExp, highlights: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Experience</button>
+            </form>
+          </div>
+        </div>
+      )}
 
-              {/* Photo Upload & Auto-Reader */}
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '0.4rem' }}>
-                  📷 Upload Certificate Photo (Auto-Reads & Auto-Fills Details)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleCertPhotoSelect}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    borderRadius: '0.4rem',
-                    background: 'var(--bg-secondary)',
-                    border: '1px dashed var(--accent-cyan)',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
-                  }}
-                />
-              </div>
+      {/* Project Modal */}
+      {showProjectModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add New Software / Network Project</h3>
+              <button onClick={() => setShowProjectModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddProject} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input type="text" placeholder="Project Title" required value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <select value={newProject.category} onChange={(e) => setNewProject({ ...newProject, category: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                <option value="Full Stack">Full Stack</option>
+                <option value="Frontend">Frontend</option>
+                <option value="Backend">Backend</option>
+                <option value="Networking">Networking</option>
+              </select>
+              <textarea placeholder="Description" rows="3" required value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Technologies (comma separated)" value={newProject.technologies} onChange={(e) => setNewProject({ ...newProject, technologies: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="url" placeholder="GitHub Repository Link" value={newProject.githubUrl} onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Project</button>
+            </form>
+          </div>
+        </div>
+      )}
 
-              {certParsingMsg && (
-                <div
-                  style={{
-                    background: 'rgba(56, 189, 248, 0.12)',
-                    border: '1px solid rgba(56, 189, 248, 0.3)',
-                    color: 'var(--accent-cyan)',
-                    padding: '0.6rem 0.85rem',
-                    borderRadius: '0.4rem',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    marginBottom: '1rem',
-                  }}
-                >
-                  {certParsingMsg}
-                </div>
-              )}
-
-              {newCert.certificateImage && (
-                <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
-                  <img
-                    src={newCert.certificateImage}
-                    alt="Certificate Preview"
-                    style={{ maxHeight: '120px', borderRadius: '0.4rem', border: '1px solid var(--border-color)', objectFit: 'contain' }}
-                  />
-                </div>
-              )}
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                  Certificate Title *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Certificate of Course Completion"
-                  required
-                  value={newCert.title}
-                  onChange={(e) => setNewCert({ ...newCert, title: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                  Course / Project Subtitle *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Networking Basics"
-                  required
-                  value={newCert.subtitle}
-                  onChange={(e) => setNewCert({ ...newCert, subtitle: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                    Organization *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Cisco Networking Academy"
-                    required
-                    value={newCert.organization}
-                    onChange={(e) => setNewCert({ ...newCert, organization: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', outline: 'none' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                    Issue Date *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 13 August 2026"
-                    required
-                    value={newCert.issueDate}
-                    onChange={(e) => setNewCert({ ...newCert, issueDate: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', outline: 'none' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                  Certificate Type / Badge Theme
-                </label>
-                <select
-                  value={newCert.type}
-                  onChange={(e) => setNewCert({ ...newCert, type: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', outline: 'none' }}
-                >
-                  <option value="tcs_ion">TCS iON</option>
-                  <option value="cisco">Cisco</option>
-                  <option value="infosys">Infosys Springboard</option>
-                  <option value="placeholder">Placeholder / Generic</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                  Skills Demonstrated (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  placeholder="IPv4, IPv6, Ethernet, Routing, Network Troubleshooting"
-                  value={newCert.skills}
-                  onChange={(e) => setNewCert({ ...newCert, skills: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', outline: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="button" onClick={() => setShowCertModal(false)} className="btn btn-outline" style={{ width: '50%' }}>
-                  Cancel
-                </button>
-                <button type="submit" disabled={certUploading} className="btn btn-primary" style={{ width: '50%' }}>
-                  {certUploading ? 'Saving Certificate...' : 'Save Certificate'}
-                </button>
-              </div>
+      {/* Certificate Modal */}
+      {showCertModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add Certificate / Course</h3>
+              <button onClick={() => setShowCertModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddCertificate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input type="text" placeholder="Title (e.g. Certificate of Course Completion)" required value={newCert.title} onChange={(e) => setNewCert({ ...newCert, title: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Subtitle / Course Name" required value={newCert.subtitle} onChange={(e) => setNewCert({ ...newCert, subtitle: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Organization / Issuer" required value={newCert.organization} onChange={(e) => setNewCert({ ...newCert, organization: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <input type="text" placeholder="Issue Date (e.g. 13 August 2026)" required value={newCert.issueDate} onChange={(e) => setNewCert({ ...newCert, issueDate: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Certificate</button>
             </form>
           </div>
         </div>
