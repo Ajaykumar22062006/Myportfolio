@@ -53,8 +53,8 @@ export default function Resume() {
           style={{
             padding: '3.5rem 2rem',
             textAlign: 'center',
-            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(37, 99, 235, 0.08))',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--accent-border-alpha)',
             borderRadius: '1.25rem',
             position: 'relative',
             overflow: 'hidden',
@@ -65,13 +65,13 @@ export default function Resume() {
               width: '64px',
               height: '64px',
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, #38bdf8, #2563eb)',
-              color: '#ffffff',
+              background: 'var(--btn-primary-bg)',
+              color: 'var(--btn-primary-text)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 1.5rem',
-              boxShadow: '0 10px 25px rgba(56, 189, 248, 0.3)',
+              boxShadow: 'none',
             }}
           >
             <FileText size={32} />

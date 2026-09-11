@@ -51,7 +51,7 @@ export default function Experience() {
                       width: '52px',
                       height: '52px',
                       borderRadius: '12px',
-                      background: 'rgba(56, 189, 248, 0.1)',
+                      background: 'transparent',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -75,9 +75,9 @@ export default function Experience() {
                             borderRadius: '9999px',
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                            backgroundColor: 'transparent',
                             color: 'var(--accent-cyan)',
-                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            border: '1px solid var(--accent-border-alpha)',
                           }}
                         >
                           {exp.type}

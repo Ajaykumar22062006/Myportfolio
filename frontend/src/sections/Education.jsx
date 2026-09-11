@@ -50,7 +50,7 @@ export default function Education() {
                       width: '52px',
                       height: '52px',
                       borderRadius: '12px',
-                      background: 'rgba(56, 189, 248, 0.1)',
+                      background: 'transparent',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -73,9 +73,9 @@ export default function Education() {
                             borderRadius: '9999px',
                             fontSize: '0.78rem',
                             fontWeight: 700,
-                            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                            backgroundColor: 'transparent',
                             color: 'var(--accent-cyan)',
-                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            border: '1px solid var(--accent-border-alpha)',
                           }}
                         >
                           {edu.status}
@@ -89,9 +89,9 @@ export default function Education() {
                             borderRadius: '9999px',
                             fontSize: '0.78rem',
                             fontWeight: 700,
-                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                            color: '#10b981',
-                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            backgroundColor: 'transparent',
+                            color: 'var(--accent-cyan)',
+                            border: '1px solid var(--accent-border-alpha)',
                           }}
                         >
                           {String(edu.cgpa || edu.CGPA || edu.score).toLowerCase().includes('cgpa')
@@ -107,9 +107,9 @@ export default function Education() {
                             borderRadius: '9999px',
                             fontSize: '0.78rem',
                             fontWeight: 700,
-                            backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                            color: '#818cf8',
-                            border: '1px solid rgba(99, 102, 241, 0.3)',
+                            backgroundColor: 'transparent',
+                            color: 'var(--accent-cyan)',
+                            border: '1px solid var(--accent-border-alpha)',
                           }}
                         >
                           {String(edu.percentage || edu.Percentage || edu.marks).toLowerCase().includes('percentage')
@@ -125,9 +125,9 @@ export default function Education() {
                             borderRadius: '9999px',
                             fontSize: '0.78rem',
                             fontWeight: 700,
-                            backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                            color: '#f59e0b',
-                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            backgroundColor: 'transparent',
+                            color: 'var(--accent-cyan)',
+                            border: '1px solid var(--accent-border-alpha)',
                           }}
                         >
                           {String(edu.result || edu.Result || edu.grade).toLowerCase().includes('result')

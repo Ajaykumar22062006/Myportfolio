@@ -62,7 +62,7 @@ export default function Projects() {
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 border: activeCategory === cat ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
-                backgroundColor: activeCategory === cat ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-card)',
+                backgroundColor: activeCategory === cat ? 'var(--accent-bg-alpha)' : 'var(--bg-card)',
                 color: activeCategory === cat ? 'var(--accent-cyan)' : 'var(--text-secondary)',
               }}
             >
@@ -102,9 +102,7 @@ export default function Projects() {
                 {/* Project Header Banner */}
                 <div
                   style={{
-                    background: project.category === 'Networking'
-                      ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(56, 189, 248, 0.1))'
-                      : 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(37, 99, 235, 0.1))',
+                    background: 'transparent',
                     padding: '1.75rem',
                     borderBottom: '1px solid var(--border-color)',
                     position: 'relative',
@@ -119,9 +117,9 @@ export default function Projects() {
                         fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
-                        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                        backgroundColor: 'transparent',
                         color: 'var(--accent-cyan)',
-                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                        border: '1px solid var(--border-color)',
                       }}
                     >
                       {project.type || project.category}
@@ -202,23 +200,33 @@ export default function Projects() {
 
                     {/* Action Links */}
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                      {project.githubUrl && project.githubUrl !== '[ADD YOUR INFORMATION]' ? (
-                        <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
-                          <GithubIcon size={16} />
-                          <span>Code</span>
-                        </a>
-                      ) : (
-                        <span className="badge-placeholder">GitHub link coming soon</span>
-                      )}
+                      {(() => {
+                        const effectiveGithubUrl = project.githubUrl && project.githubUrl !== '[ADD YOUR INFORMATION]'
+                          ? project.githubUrl
+                          : project.title?.toLowerCase().includes('hostel')
+                          ? 'https://github.com/Ajaykumar22062006/hostel_management'
+                          : project.title?.toLowerCase().includes('network') || project.category === 'Networking'
+                          ? 'https://github.com/Ajaykumar22062006/Network-monitoring-analysis-system'
+                          : null;
 
-                      {project.liveUrl && project.liveUrl !== '[ADD YOUR INFORMATION]' ? (
-                        <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">
-                          <ExternalLink size={16} />
-                          <span>View Live</span>
-                        </a>
-                      ) : (
-                        <span className="badge-placeholder">Project link coming soon</span>
-                      )}
+                        return (
+                          <>
+                            {effectiveGithubUrl && (
+                              <a href={effectiveGithubUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">
+                                <GithubIcon size={16} />
+                                <span>Code (GitHub)</span>
+                              </a>
+                            )}
+
+                            {project.liveUrl && project.liveUrl !== '[ADD YOUR INFORMATION]' && project.liveUrl.trim() !== '' && (
+                              <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">
+                                <ExternalLink size={16} />
+                                <span>View Live</span>
+                              </a>
+                            )}
+                          </>
+                        );
+                      })()}
 
                       {project.certificateTitle && (
                         <a href="#certificates" className="btn btn-outline btn-sm" style={{ color: 'var(--accent-amber)', borderColor: 'rgba(245, 158, 11, 0.3)' }}>

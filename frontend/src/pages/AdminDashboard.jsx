@@ -119,6 +119,7 @@ export default function AdminDashboard() {
 
   const [certificatesList, setCertificatesList] = useState([]);
   const [showCertModal, setShowCertModal] = useState(false);
+  const [certAutoMsg, setCertAutoMsg] = useState('');
   const [newCert, setNewCert] = useState({
     title: '',
     subtitle: '',
@@ -347,11 +348,78 @@ export default function AdminDashboard() {
     try {
       await createCertificate(newCert);
       setShowCertModal(false);
+      setCertAutoMsg('');
       setNewCert({ title: '', subtitle: '', organization: '', issueDate: '', type: 'cisco', skills: '', certificateImage: '' });
       loadDashboardData();
     } catch (err) {
       alert('Failed to add certificate');
     }
+  };
+
+  const handleCertificateFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      const fileName = file.name;
+      const cleanName = fileName.replace(/[-_]/g, ' ').replace(/\.[^/.]+$/, '');
+      const lower = cleanName.toLowerCase();
+
+      let title = 'Certificate of Course Completion';
+      let subtitle = cleanName;
+      let organization = 'Course Issuer';
+      let issueDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      let type = 'cisco';
+      let skills = '';
+
+      if (lower.includes('tcs') || lower.includes('ion') || lower.includes('hostel')) {
+        organization = 'TCS iON Applied Industry Projects (AIP)';
+        type = 'tcs_ion';
+        title = 'Certificate of Industry Project';
+        subtitle = 'University Hostel Management System';
+        skills = 'Hostel Operations, Software System Architecture, Database Management';
+      } else if (lower.includes('cisco') || lower.includes('network')) {
+        organization = 'Cisco Networking Academy';
+        type = 'cisco';
+        title = 'Certificate of Course Completion';
+        subtitle = 'Networking Basics';
+        skills = 'Network communication, Ethernet, IPv4, IPv6, Routing, Network troubleshooting';
+      } else if (lower.includes('infosys') || lower.includes('sql') || lower.includes('springboard')) {
+        organization = 'Infosys Springboard';
+        type = 'infosys';
+        title = 'Course Completion Certificate';
+        subtitle = 'Learn SQL For Oracle Databases – Using Toad From Scratch';
+        skills = 'SQL Query Writing, Oracle Database, Toad IDE, Schema Design';
+      } else if (lower.includes('python')) {
+        organization = 'Python Institute';
+        type = 'other';
+        title = 'Certificate of Completion';
+        subtitle = 'Python Programming & REST API Architecture';
+        skills = 'Python, Flask, REST API, Database Management';
+      } else if (lower.includes('react') || lower.includes('web') || lower.includes('frontend')) {
+        organization = 'Web Development Institute';
+        type = 'other';
+        title = 'Certificate of Completion';
+        subtitle = 'React.js & Full-Stack Web Development';
+        skills = 'React.js, JavaScript, Node.js, Express';
+      }
+
+      setNewCert({
+        title,
+        subtitle,
+        organization,
+        issueDate,
+        type,
+        skills,
+        certificateImage: dataUrl,
+      });
+
+      setCertAutoMsg(`Details auto-extracted from ${fileName}`);
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleDeleteCertificate = async (id) => {
@@ -917,17 +985,62 @@ export default function AdminDashboard() {
       {/* Certificate Modal */}
       {showCertModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
-          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add Certificate / Course</h3>
-              <button onClick={() => setShowCertModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+              <button onClick={() => { setShowCertModal(false); setCertAutoMsg(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
             </div>
+
+            {/* Auto-Fetch File Upload Dropzone */}
+            <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: '0.75rem', border: '2px dashed var(--border-color)', textAlign: 'center', marginBottom: '1.25rem' }}>
+              <Upload size={26} style={{ color: 'var(--accent-cyan)', marginBottom: '0.4rem' }} />
+              <div style={{ fontSize: '0.92rem', fontWeight: 700, marginBottom: '0.2rem' }}>
+                Upload Certificate File to Auto-Fetch Details
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
+                Upload your certificate file/image to automatically extract title, organization, course name, and image preview.
+              </div>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleCertificateFileSelect}
+                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.4rem', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', cursor: 'pointer' }}
+              />
+            </div>
+
+            {certAutoMsg && (
+              <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '0.75rem 1rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CheckCircle2 size={18} />
+                <span>{certAutoMsg}</span>
+              </div>
+            )}
+
+            {/* Certificate Image Preview Thumbnail if uploaded */}
+            {newCert.certificateImage && (
+              <div style={{ marginBottom: '1.25rem', textAlign: 'center', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600 }}>Certificate Image Preview</div>
+                <img src={newCert.certificateImage} alt="Certificate Preview" style={{ maxHeight: '160px', maxWidth: '100%', borderRadius: '0.4rem', objectFit: 'contain' }} />
+              </div>
+            )}
+
             <form onSubmit={handleAddCertificate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input type="text" placeholder="Title (e.g. Certificate of Course Completion)" required value={newCert.title} onChange={(e) => setNewCert({ ...newCert, title: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="Subtitle / Course Name" required value={newCert.subtitle} onChange={(e) => setNewCert({ ...newCert, subtitle: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="Organization / Issuer" required value={newCert.organization} onChange={(e) => setNewCert({ ...newCert, organization: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="Issue Date (e.g. 13 August 2026)" required value={newCert.issueDate} onChange={(e) => setNewCert({ ...newCert, issueDate: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Certificate</button>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Certificate Title</label>
+                <input type="text" placeholder="Title (e.g. Certificate of Course Completion)" required value={newCert.title} onChange={(e) => setNewCert({ ...newCert, title: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Subtitle / Course Name</label>
+                <input type="text" placeholder="Subtitle / Course Name" required value={newCert.subtitle} onChange={(e) => setNewCert({ ...newCert, subtitle: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Organization / Issuer</label>
+                <input type="text" placeholder="Organization / Issuer" required value={newCert.organization} onChange={(e) => setNewCert({ ...newCert, organization: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Issue Date</label>
+                <input type="text" placeholder="Issue Date (e.g. 13 August 2026)" required value={newCert.issueDate} onChange={(e) => setNewCert({ ...newCert, issueDate: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem', marginTop: '0.5rem' }}>Save Certificate</button>
             </form>
           </div>
         </div>

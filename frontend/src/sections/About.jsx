@@ -4,12 +4,12 @@ export default function About() {
   const whatIDoCards = [
     {
       title: 'Frontend Development',
-      icon: <Layout size={28} style={{ color: '#38bdf8' }} />,
+      icon: <Layout size={28} style={{ color: 'var(--accent-cyan)' }} />,
       description: 'Designing and building responsive, user-centric interfaces using React.js, JavaScript (ES6+), HTML5, and CSS3.',
     },
     {
       title: 'Backend Development',
-      icon: <Server size={28} style={{ color: '#3b82f6' }} />,
+      icon: <Server size={28} style={{ color: 'var(--accent-cyan)' }} />,
       description: 'Creating structured server-side logic and RESTful web services using Python (Flask) and Node.js Express.',
     },
     {
@@ -19,7 +19,7 @@ export default function About() {
     },
     {
       title: 'Network Applications',
-      icon: <Network size={28} style={{ color: '#6366f1' }} />,
+      icon: <Network size={28} style={{ color: 'var(--accent-cyan)' }} />,
       description: 'Designing network topologies and implementing packet analysis, VLAN routing, IPv4/IPv6, and device connectivity in Cisco environments.',
     },
   ];
@@ -74,7 +74,7 @@ export default function About() {
               {focusAreas.map((area, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                   <CheckCircle2 size={20} style={{ color: 'var(--accent-cyan)', flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: '0.98rem' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.96rem', lineHeight: 1.6 }}>
                     {area}
                   </span>
                 </div>

@@ -100,12 +100,12 @@ export default function Navbar() {
               width: '38px',
               height: '38px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #38bdf8, #2563eb)',
+              background: 'var(--btn-primary-bg)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)',
+              color: 'var(--btn-primary-text)',
+              boxShadow: 'none',
             }}
           >
             <Code2 size={22} />
