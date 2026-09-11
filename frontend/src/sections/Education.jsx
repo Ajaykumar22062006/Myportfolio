@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getEducation } from '../services/api';
+import { getEducation, DEFAULT_EDUCATION } from '../services/api';
 import { GraduationCap, Calendar, Building, BookOpen, Book } from 'lucide-react';
 
 export default function Education() {
@@ -11,9 +11,10 @@ export default function Education() {
       setLoading(true);
       try {
         const data = await getEducation();
-        setEducationItems(Array.isArray(data) ? data : []);
+        setEducationItems(Array.isArray(data) && data.length > 0 ? data : DEFAULT_EDUCATION);
       } catch (err) {
         console.error('Failed to load education:', err);
+        setEducationItems(DEFAULT_EDUCATION);
       } finally {
         setLoading(false);
       }

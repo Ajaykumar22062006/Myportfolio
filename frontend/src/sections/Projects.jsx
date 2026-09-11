@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProjects } from '../services/api';
+import { getProjects, DEFAULT_PROJECTS } from '../services/api';
 import { ExternalLink, Award, CheckCircle, ShieldCheck } from 'lucide-react';
 import { GithubIcon } from '../components/SocialIcons';
 
@@ -13,9 +13,10 @@ export default function Projects() {
       setLoading(true);
       try {
         const data = await getProjects();
-        setProjects(data);
+        setProjects(Array.isArray(data) && data.length > 0 ? data : DEFAULT_PROJECTS);
       } catch (err) {
         console.error('Failed to load projects:', err);
+        setProjects(DEFAULT_PROJECTS);
       } finally {
         setLoading(false);
       }

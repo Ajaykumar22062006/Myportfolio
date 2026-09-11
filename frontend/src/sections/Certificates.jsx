@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getCertificates } from '../services/api';
+import { getCertificates, DEFAULT_CERTIFICATES } from '../services/api';
 import tcsCertImg from '../assets/tcs_ion_cert.png';
 import ciscoCertImg from '../assets/cisco_cert.png';
 import infosysCertImg from '../assets/infosys_cert.png';
@@ -14,10 +14,10 @@ export default function Certificates() {
     const fetchCerts = async () => {
       try {
         const data = await getCertificates();
-        setCertificates(Array.isArray(data) ? data : []);
+        setCertificates(Array.isArray(data) && data.length > 0 ? data : DEFAULT_CERTIFICATES);
       } catch (err) {
         console.error('Failed to load certificates:', err);
-        setCertificates([]);
+        setCertificates(DEFAULT_CERTIFICATES);
       }
     };
     fetchCerts();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getExperience } from '../services/api';
+import { getExperience, DEFAULT_EXPERIENCE } from '../services/api';
 import { Briefcase, Calendar, MapPin, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 export default function Experience() {
@@ -11,9 +11,10 @@ export default function Experience() {
       setLoading(true);
       try {
         const data = await getExperience();
-        setExperienceItems(Array.isArray(data) ? data : []);
+        setExperienceItems(Array.isArray(data) && data.length > 0 ? data : DEFAULT_EXPERIENCE);
       } catch (err) {
         console.error('Failed to load experience:', err);
+        setExperienceItems(DEFAULT_EXPERIENCE);
       } finally {
         setLoading(false);
       }
