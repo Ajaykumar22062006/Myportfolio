@@ -25,8 +25,26 @@ export default function Resume() {
     const resumeToUse = dbResume || DEFAULT_RESUME;
     const content = resumeToUse.base64Content;
     const filename = resumeToUse.filename || 'Ajay_Kumar_D_Resume.pdf';
+    const staticUrl = resumeToUse.url || '/Ajay_Kumar_D_Resume.pdf';
 
-    if (!content) return;
+    // If viewing and static PDF URL is available, open it directly in a new tab
+    if (!isDownload && staticUrl) {
+      const win = window.open(staticUrl, '_blank');
+      if (!win) window.location.href = staticUrl;
+      return;
+    }
+
+    if (!content) {
+      if (staticUrl) {
+        const link = document.createElement('a');
+        link.href = staticUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      return;
+    }
 
     // HTML Resume fallback
     if (content.startsWith('data:text/html')) {
@@ -78,7 +96,7 @@ export default function Resume() {
 
     // Direct link fallback
     const link = document.createElement('a');
-    link.href = content;
+    link.href = staticUrl || content;
     if (isDownload) {
       link.download = filename;
     } else {
