@@ -1,48 +1,100 @@
 import { useState, useEffect } from 'react';
-import { getResume } from '../services/api';
+import { getResume, DEFAULT_RESUME } from '../services/api';
 import { FileText, Download, ExternalLink, CheckCircle } from 'lucide-react';
 
 export default function Resume() {
-  const [dbResume, setDbResume] = useState(null);
+  const [dbResume, setDbResume] = useState(DEFAULT_RESUME);
 
   useEffect(() => {
     const fetchDbResume = async () => {
       try {
         const data = await getResume();
-        if (data && data.base64Content) {
+        if (data && (data.base64Content || data.filename)) {
           setDbResume(data);
+        } else {
+          setDbResume(DEFAULT_RESUME);
         }
       } catch (err) {
-        console.warn('No custom DB resume found, using default resume handler:', err);
+        setDbResume(DEFAULT_RESUME);
       }
     };
     fetchDbResume();
   }, []);
 
-  const handleDownloadResume = () => {
-    if (dbResume && dbResume.base64Content) {
-      const link = document.createElement('a');
-      link.href = dbResume.base64Content;
-      link.download = dbResume.filename || 'Ajay_Kumar_D_Resume.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      return;
-    }
-    alert('No resume uploaded yet. Please log into the Admin Control Panel (/admin) to upload your official resume document.');
-  };
+  const openOrDownloadResume = (isDownload = false) => {
+    const resumeToUse = dbResume || DEFAULT_RESUME;
+    const content = resumeToUse.base64Content;
+    const filename = resumeToUse.filename || 'Ajay_Kumar_D_Resume.pdf';
 
-  const handleViewResume = () => {
-    if (dbResume && dbResume.base64Content) {
-      const win = window.open();
+    if (!content) return;
+
+    // HTML Resume fallback
+    if (content.startsWith('data:text/html')) {
+      const htmlText = decodeURIComponent(content.replace('data:text/html;charset=utf-8,', ''));
+      const win = window.open('', '_blank');
       if (win) {
-        win.document.write(
-          `<iframe src="${dbResume.base64Content}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`
-        );
+        win.document.open();
+        win.document.write(htmlText);
+        win.document.close();
+        if (isDownload) {
+          setTimeout(() => win.print(), 500);
+        }
         return;
       }
     }
-    alert('No resume uploaded yet. Please log into the Admin Control Panel (/admin) to upload your official resume document.');
+
+    // PDF or Binary Data URI
+    try {
+      const parts = content.split(',');
+      if (parts.length === 2) {
+        const mimeMatch = parts[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+        const bstr = atob(parts[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+
+        if (isDownload) {
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        } else {
+          const win = window.open(blobUrl, '_blank');
+          if (!win) window.location.href = blobUrl;
+        }
+        return;
+      }
+    } catch (e) {
+      console.warn('Fallback data URI download:', e);
+    }
+
+    // Direct link fallback
+    const link = document.createElement('a');
+    link.href = content;
+    if (isDownload) {
+      link.download = filename;
+    } else {
+      link.target = '_blank';
+    }
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadResume = () => {
+    openOrDownloadResume(true);
+  };
+
+  const handleViewResume = () => {
+    openOrDownloadResume(false);
   };
 
   return (

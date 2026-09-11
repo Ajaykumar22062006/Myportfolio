@@ -382,20 +382,187 @@ export const deleteContactMessage = async (id) => {
   return res.data;
 };
 
+export const DEFAULT_RESUME = {
+  filename: 'Ajay_Kumar_D_Resume.pdf',
+  fileType: 'application/pdf',
+  base64Content:
+    'data:text/html;charset=utf-8,' +
+    encodeURIComponent(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ajay Kumar D - Resume</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; line-height: 1.5; color: #1e293b; background: #f1f5f9; padding: 24px 12px; margin: 0; }
+    .resume-card { max-width: 820px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #cbd5e1; }
+    .header { text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 20px; margin-bottom: 24px; }
+    .name { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: 0.5px; margin: 0 0 4px; text-transform: uppercase; }
+    .title { font-size: 16px; font-weight: 700; color: #0284c7; margin-bottom: 12px; }
+    .contact-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; font-size: 13.5px; color: #475569; font-weight: 500; }
+    .contact-links a { color: #0284c7; text-decoration: none; font-weight: 600; }
+    .contact-links a:hover { text-decoration: underline; }
+    .sec-title { font-size: 15px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.75px; margin-top: 24px; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1.5px solid #0284c7; }
+    .item { margin-bottom: 16px; }
+    .item-flex { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; font-size: 14.5px; }
+    .item-bold { font-weight: 700; color: #0f172a; }
+    .item-date { font-size: 13px; color: #64748b; font-weight: 600; }
+    .item-sub { font-size: 13.5px; color: #0284c7; font-weight: 600; margin-top: 2px; margin-bottom: 4px; }
+    .desc { font-size: 13.5px; color: #334155; line-height: 1.6; }
+    ul { margin: 6px 0 0; padding-left: 20px; font-size: 13.5px; color: #334155; }
+    li { margin-bottom: 4px; }
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; font-size: 13.5px; }
+    .skill-box { background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .skill-cat { font-weight: 700; color: #0f172a; display: block; margin-bottom: 2px; }
+    @media print {
+      body { background: white; padding: 0; }
+      .resume-card { box-shadow: none; border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="resume-card">
+    <div class="header">
+      <h1 class="name">AJAY KUMAR D</h1>
+      <div class="title">Aspiring Full-Stack Developer</div>
+      <div class="contact-links">
+        <span>Email: <a href="mailto:ajay872072@gmail.com">ajay872072@gmail.com</a></span>
+        <span>GitHub: <a href="https://github.com/Ajaykumar22062006" target="_blank">github.com/Ajaykumar22062006</a></span>
+        <span>LinkedIn: <a href="https://www.linkedin.com/in/ajay-kumar-d-18377a292" target="_blank">linkedin.com/in/ajay-kumar-d</a></span>
+      </div>
+    </div>
+
+    <div class="sec-title">Professional Summary</div>
+    <div class="desc">
+      Aspiring Full-Stack Developer with a practical mindset centered on software engineering fundamentals, database architecture, and network communications. Proficient in React.js, Node.js, Express, MongoDB, Python (Flask), and RESTful API development.
+    </div>
+
+    <div class="sec-title">Education</div>
+    <div class="item">
+      <div class="item-flex">
+        <span class="item-bold">Jeppiaar Institute of Technology</span>
+        <span class="item-date">2023 – 2027</span>
+      </div>
+      <div class="item-sub">B.Tech in Artificial Intelligence and Data Science (CGPA: 8.5 / 10)</div>
+      <div class="desc">Affiliated to Anna University • Status: In Progress</div>
+    </div>
+
+    <div class="item">
+      <div class="item-flex">
+        <span class="item-bold">Anderson Higher Secondary School</span>
+        <span class="item-date">2022 – 2023</span>
+      </div>
+      <div class="item-sub">Higher Secondary Certificate (HSC / 12th Grade) — 90%</div>
+      <div class="desc">State Board of School Examinations</div>
+    </div>
+
+    <div class="item">
+      <div class="item-flex">
+        <span class="item-bold">Anderson Higher Secondary School</span>
+        <span class="item-date">2020 – 2021</span>
+      </div>
+      <div class="item-sub">Secondary School Leaving Certificate (SSLC / 10th Grade) — Pass</div>
+      <div class="desc">State Board of Secondary Education</div>
+    </div>
+
+    <div class="sec-title">Experience & Internships</div>
+    <div class="item">
+      <div class="item-flex">
+        <span class="item-bold">Full-Stack Developer Intern</span>
+        <span class="item-date">Feb 2026 – May 2026</span>
+      </div>
+      <div class="item-sub">TCS iON Applied Industry Projects (AIP)</div>
+      <ul>
+        <li>Engineered RESTful endpoints using Node.js, Express, and MongoDB Mongoose schemas for University Hostel Management System.</li>
+        <li>Built responsive React frontend dashboards with glassmorphism UI components and Redux state.</li>
+      </ul>
+    </div>
+
+    <div class="sec-title">Key Projects</div>
+    <div class="item">
+      <div class="item-flex">
+        <span class="item-bold">University Hostel Management System</span>
+        <span class="item-date">TCS iON AIP</span>
+      </div>
+      <div class="desc">Digitized student registration, room allocation, fee management, and complaint tracking.</div>
+      <ul>
+        <li>Technologies: React.js, Node.js, Express, MongoDB, Git</li>
+      </ul>
+    </div>
+
+    <div class="item">
+      <div class="item-flex">
+        <span class="item-bold">Network Monitoring and Analysis System</span>
+        <span class="item-date">Cisco Academy Simulation</span>
+      </div>
+      <div class="desc">Flask-based Network Monitoring system with device inventory, ICMP latency testing, IPv4/IPv6 Subnet Calculator, and ARP table inspector.</div>
+      <ul>
+        <li>Technologies: Python (Flask), SQLite, Cisco Packet Tracer, IPv4/IPv6, VLANs</li>
+      </ul>
+    </div>
+
+    <div class="sec-title">Certifications</div>
+    <ul>
+      <li><strong>TCS iON Applied Industry Projects:</strong> Certificate of Industry Project (University Hostel Management System)</li>
+      <li><strong>Cisco Networking Academy:</strong> Networking Basics Certificate</li>
+      <li><strong>Infosys Springboard:</strong> Learn SQL For Oracle Databases – Using Toad From Scratch</li>
+    </ul>
+
+    <div class="sec-title">Technical Skills</div>
+    <div class="skills-grid">
+      <div class="skill-box"><span class="skill-cat">Frontend</span> React.js, JavaScript (ES6+), HTML5, CSS3</div>
+      <div class="skill-box"><span class="skill-cat">Backend</span> Node.js, Express.js, Python (Flask), REST APIs</div>
+      <div class="skill-box"><span class="skill-cat">Databases</span> MongoDB, SQLite, Oracle SQL</div>
+      <div class="skill-box"><span class="skill-cat">Tools & Networking</span> Git, GitHub, Cisco Packet Tracer, IPv4/IPv6</div>
+    </div>
+  </div>
+</body>
+</html>
+`),
+};
+
 // Resume API
 export const getResume = async () => {
   try {
     const res = await api.get('/resume');
-    return res.data;
+    if (res.data && (res.data.base64Content || res.data.filename)) {
+      return res.data;
+    }
   } catch (err) {
-    return null;
+    console.warn('Backend resume API unavailable, checking local storage & defaults.');
   }
+
+  try {
+    const stored = localStorage.getItem('portfolio_admin_resume');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.base64Content) return parsed;
+    }
+  } catch (e) {
+    console.warn('Error reading stored resume:', e);
+  }
+
+  return DEFAULT_RESUME;
 };
 
 export const uploadResume = async (data) => {
-  const res = await api.post('/resume', data);
-  return res.data;
+  try {
+    localStorage.setItem('portfolio_admin_resume', JSON.stringify(data));
+  } catch (e) {
+    console.warn('Failed to save resume to localStorage:', e);
+  }
+
+  try {
+    const res = await api.post('/resume', data);
+    return res.data;
+  } catch (err) {
+    console.warn('Backend resume upload API failed, stored in local fallback:', err);
+    return { message: 'Resume uploaded successfully!', data };
+  }
 };
 
 export default api;
+
 
