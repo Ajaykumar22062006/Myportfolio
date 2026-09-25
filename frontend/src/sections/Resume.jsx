@@ -24,8 +24,8 @@ export default function Resume() {
   const openOrDownloadResume = (isDownload = false) => {
     const resumeToUse = dbResume || DEFAULT_RESUME;
     const content = resumeToUse.base64Content;
-    const filename = resumeToUse.filename || 'Ajay_Kumar_D_Resume.pdf';
-    const staticUrl = resumeToUse.url || '/Ajay_Kumar_D_Resume.pdf';
+    const filename = resumeToUse.filename || 'ajay-resume.pdf';
+    const staticUrl = resumeToUse.url || '/ajay-resume.pdf';
 
     // If viewing and static PDF URL is available, open it directly in a new tab
     if (!isDownload && staticUrl) {
