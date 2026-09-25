@@ -27,8 +27,8 @@ export default function Resume() {
     const filename = resumeToUse.filename || 'ajay-resume.pdf';
     const staticUrl = resumeToUse.url || '/ajay-resume.pdf';
 
-    // If viewing and static PDF URL is available, open it directly in a new tab
-    if (!isDownload && staticUrl) {
+    // If viewing and no base64 content, fall back to static URL
+    if (!isDownload && !content && staticUrl) {
       const win = window.open(staticUrl, '_blank');
       if (!win) window.location.href = staticUrl;
       return;
