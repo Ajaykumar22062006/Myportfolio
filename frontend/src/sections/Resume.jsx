@@ -27,11 +27,10 @@ export default function Resume() {
     const filename = resumeToUse.filename || 'ajay-resume.pdf';
     const staticUrl = resumeToUse.url || '/ajay-resume.pdf';
 
-    // If viewing and no base64 content, fall back to static URL with cache-busting
-    if (!isDownload && !content && staticUrl) {
-      const cacheBustedUrl = `${staticUrl}?v=${Date.now()}`;
-      const win = window.open(cacheBustedUrl, '_blank');
-      if (!win) window.location.href = cacheBustedUrl;
+    // If viewing and static PDF URL is available, open it directly in a new tab
+    if (!isDownload && staticUrl) {
+      const win = window.open(staticUrl, '_blank');
+      if (!win) window.location.href = staticUrl;
       return;
     }
 
