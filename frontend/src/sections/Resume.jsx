@@ -27,21 +27,22 @@ export default function Resume() {
     const filename = resumeToUse.filename || 'ajay-resume.pdf';
     const staticUrl = resumeToUse.url || '/ajay-resume.pdf';
 
-    // If viewing and static PDF URL is available, open it directly in a new tab
-    if (!isDownload && staticUrl) {
-      const win = window.open(staticUrl, '_blank');
-      if (!win) window.location.href = staticUrl;
-      return;
-    }
-
+    // If no base64Content is available, fall back to the static PDF
     if (!content) {
       if (staticUrl) {
-        const link = document.createElement('a');
-        link.href = staticUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        if (isDownload) {
+          const link = document.createElement('a');
+          link.href = staticUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          const win = window.open(staticUrl, '_blank');
+          if (!win) window.location.href = staticUrl;
+        }
+      } else {
+        alert('Resume is currently unavailable. Please try again later.');
       }
       return;
     }
