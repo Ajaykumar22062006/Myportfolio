@@ -68,15 +68,20 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-[var(--glass-bg)] backdrop-blur-md shadow-lg border-b border-[var(--border-color)] py-3'
-          : 'bg-transparent py-5'
-      }`}
+      className="navbar-header"
       style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
         backgroundColor: isScrolled ? 'var(--glass-bg)' : 'transparent',
         backdropFilter: isScrolled ? 'blur(12px)' : 'none',
         borderBottom: isScrolled ? '1px solid var(--border-color)' : 'none',
+        boxShadow: isScrolled ? '0 10px 30px -10px rgba(0, 0, 0, 0.5)' : 'none',
+        paddingTop: isScrolled ? '12px' : '18px',
+        paddingBottom: isScrolled ? '12px' : '14px',
+        transition: 'all 0.3s ease',
       }}
     >
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
