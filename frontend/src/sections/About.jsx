@@ -30,6 +30,7 @@ export default function About() {
     'Database management and data modeling',
     'Networking principles, routing, and simulation',
     'Full-stack application development workflows',
+    'Cloud deployment, DevOps fundamentals, and CI/CD pipelines',
   ];
 
   return (
