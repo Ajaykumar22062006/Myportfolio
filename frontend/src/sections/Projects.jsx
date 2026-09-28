@@ -2,6 +2,30 @@ import { useState, useEffect } from 'react';
 import { getProjects, DEFAULT_PROJECTS } from '../services/api';
 import { ExternalLink, Award, CheckCircle, ShieldCheck } from 'lucide-react';
 import { GithubIcon } from '../components/SocialIcons';
+const parseTechnologies = (techInput) => {
+  if (!techInput) return [];
+  const list = Array.isArray(techInput) ? techInput : [techInput];
+  const parsed = [];
+
+  list.forEach((item) => {
+    if (typeof item === 'string') {
+      const commaParts = item.split(',');
+      commaParts.forEach((part) => {
+        const subParts = part.split(/\band\b/i);
+        subParts.forEach((sp) => {
+          let trimmed = sp.trim().replace(/^and\s+/i, '').trim();
+          if (trimmed) {
+            parsed.push(trimmed);
+          }
+        });
+      });
+    } else if (item) {
+      parsed.push(String(item).trim());
+    }
+  });
+
+  return parsed;
+};
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
@@ -181,7 +205,7 @@ export default function Projects() {
                   {/* Tech Stack Badges */}
                   <div style={{ marginTop: 'auto', paddingTop: '1rem' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                      {project.technologies?.map((tech, idx) => (
+                      {parseTechnologies(project.technologies).map((tech, idx) => (
                         <span
                           key={idx}
                           style={{
@@ -202,13 +226,31 @@ export default function Projects() {
                     {/* Action Links */}
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                       {(() => {
-                        const effectiveGithubUrl = project.githubUrl && project.githubUrl !== '[ADD YOUR INFORMATION]'
+                        const effectiveGithubUrl = project.githubUrl && project.githubUrl !== '[ADD YOUR INFORMATION]' && project.githubUrl.trim() !== ''
                           ? project.githubUrl
+                          : project.title?.toLowerCase().includes('portfolio')
+                          ? 'https://github.com/Ajaykumar22062006/Myportfolio'
+                          : project.title?.toLowerCase().includes('foodrescue') || project.title?.toLowerCase().includes('food rescue')
+                          ? 'https://github.com/Ajaykumar22062006/FoodRescue'
                           : project.title?.toLowerCase().includes('hostel')
                           ? 'https://github.com/Ajaykumar22062006/hostel_management'
                           : project.title?.toLowerCase().includes('network') || project.category === 'Networking'
                           ? 'https://github.com/Ajaykumar22062006/Network-monitoring-analysis-system'
                           : null;
+
+                        const effectiveLiveUrl = project.liveUrl && project.liveUrl !== '[ADD YOUR INFORMATION]' && project.liveUrl.trim() !== ''
+                          ? project.liveUrl
+                          : project.vercelUrl && project.vercelUrl.trim() !== ''
+                          ? project.vercelUrl
+                          : project.title?.toLowerCase().includes('portfolio')
+                          ? 'https://myportfolio-ajaykumar.vercel.app'
+                          : project.title?.toLowerCase().includes('foodrescue') || project.title?.toLowerCase().includes('food rescue')
+                          ? 'https://foodrescue-web.vercel.app'
+                          : project.title?.toLowerCase().includes('hostel')
+                          ? 'https://hostel-management-tcs.vercel.app'
+                          : project.title?.toLowerCase().includes('network') || project.category === 'Networking'
+                          ? 'https://network-monitoring-cisco.vercel.app'
+                          : 'https://network-monitoring-cisco.vercel.app';
 
                         return (
                           <>
@@ -219,10 +261,22 @@ export default function Projects() {
                               </a>
                             )}
 
-                            {project.liveUrl && project.liveUrl !== '[ADD YOUR INFORMATION]' && project.liveUrl.trim() !== '' && (
-                              <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">
-                                <ExternalLink size={16} />
-                                <span>View Live</span>
+                            {effectiveLiveUrl && (
+                              <a
+                                href={effectiveLiveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-outline btn-sm"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                  fontWeight: 600,
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                <ExternalLink size={15} />
+                                <span>Live Demo (Vercel)</span>
                               </a>
                             )}
                           </>

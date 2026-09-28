@@ -127,17 +127,7 @@ export default function Footer() {
               </a>
             </div>
 
-            <a
-              href="/admin"
-              style={{
-                fontSize: '0.82rem',
-                color: 'var(--accent-cyan)',
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-            >
-              🔒 Admin Portal Login (/admin)
-            </a>
+
           </div>
         </div>
 

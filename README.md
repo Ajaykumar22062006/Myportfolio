@@ -6,12 +6,12 @@ A modern, production-quality full-stack developer portfolio application built fo
 
 - **Responsive Glassmorphism UI**: High-impact, modern design system built with React, CSS variables, and Redux state management.
 - **Redux Dark/Light Theme**: Persisted theme preferences saved across sessions using `@reduxjs/toolkit`.
-- **Dynamic Projects Section**: Showcases *University Hostel Management System* (TCS iON AIP) and *Network Monitoring System* with Cisco Packet Tracer simulation, with category filtering ([All], [Frontend], [Backend], [Full Stack], [Networking]).
+- **Dynamic Projects Section**: Showcases *FoodRescue (Surplus Food Rescue Platform)*, *Personal Full-Stack Developer Portfolio*, *University Hostel Management System* (TCS iON AIP), and *Network Monitoring System* with Cisco Packet Tracer simulation, with category filtering ([All], [Frontend], [Backend], [Full Stack], [Networking]).
 - **Certificate Lightbox Gallery & Auto-Reader**: Verified credentials gallery featuring TCS iON AIP, Cisco Networking Academy (Networking Basics), Infosys Springboard (SQL), photo upload with auto-details extraction, and full-screen interactive lightbox modal with zoom and key accessibility.
 - **Fact-Based Skill Matrix**: Skill badges for Frontend, Backend, Database, Networking, and Tools without artificial percentage bars.
 - **Validated Contact Form**: Frontend form validation sending queries to Node Express REST API + MongoDB.
 - **Base64 Resume Upload**: Admin dashboard tab allowing file uploads (PDF, DOCX, TXT), client-side Base64 conversion, and direct MongoDB document persistence.
-- **GitHub Integration**: Live developer activity fetching public repositories.
+- **GitHub Integration**: Live developer activity fetching public repositories including `FoodRescue` and `Myportfolio`.
 - **Admin Dashboard (`/admin`)**: Protected portal with JWT authentication for full CRUD operations on Projects, Certificates, Resume, and Contact messages.
 - **Node.js Express REST API & MongoDB**: Mongoose backend with CORS security, input sanitization, JWT authentication, and fallback support.
 

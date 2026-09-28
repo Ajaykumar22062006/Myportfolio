@@ -15,6 +15,7 @@ import {
   deleteExperience,
   getProjects,
   createProject,
+  updateProject,
   deleteProject,
   getCertificates,
   createCertificate,
@@ -24,6 +25,31 @@ import {
   getResume,
   uploadResume,
 } from '../services/api';
+
+const parseTechnologies = (techInput) => {
+  if (!techInput) return [];
+  const list = Array.isArray(techInput) ? techInput : [techInput];
+  const parsed = [];
+
+  list.forEach((item) => {
+    if (typeof item === 'string') {
+      const commaParts = item.split(',');
+      commaParts.forEach((part) => {
+        const subParts = part.split(/\band\b/i);
+        subParts.forEach((sp) => {
+          let trimmed = sp.trim().replace(/^and\s+/i, '').trim();
+          if (trimmed) {
+            parsed.push(trimmed);
+          }
+        });
+      });
+    } else if (item) {
+      parsed.push(String(item).trim());
+    }
+  });
+
+  return parsed;
+};
 import {
   User,
   GraduationCap,
@@ -104,6 +130,7 @@ export default function AdminDashboard() {
 
   const [projectsList, setProjectsList] = useState([]);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState(null);
   const [newProject, setNewProject] = useState({
     title: '',
     category: 'Full Stack',
@@ -253,9 +280,10 @@ export default function AdminDashboard() {
       setShowEduModal(false);
       setEditingEduId(null);
       setNewEdu({ degree: '', department: '', college: '', university: '', duration: '', graduationYear: '', status: 'In Progress', cgpa: '', percentage: '', result: '', highlights: '' });
-      loadDashboardData();
+      await loadDashboardData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save education record');
+      console.error('Save education error:', err);
+      alert(err.response?.data?.message || err.message || 'Failed to save education record');
     }
   };
 
@@ -322,15 +350,66 @@ export default function AdminDashboard() {
   };
 
   // Project CRUD
-  const handleAddProject = async (e) => {
+  const handleOpenAddProjectModal = () => {
+    setEditingProjectId(null);
+    setNewProject({
+      title: '',
+      category: 'Full Stack',
+      type: 'Software Project',
+      organization: '',
+      duration: '',
+      period: '',
+      description: '',
+      technologies: '',
+      githubUrl: '',
+      liveUrl: '',
+    });
+    setShowProjectModal(true);
+  };
+
+  const handleEditProject = (proj) => {
+    setEditingProjectId(proj._id || proj.id);
+    setNewProject({
+      title: proj.title || '',
+      category: proj.category || 'Full Stack',
+      type: proj.type || 'Software Project',
+      organization: proj.organization || '',
+      duration: proj.duration || '',
+      period: proj.period || '',
+      description: proj.description || '',
+      technologies: proj.technologies ? (Array.isArray(proj.technologies) ? proj.technologies.join(', ') : proj.technologies) : '',
+      githubUrl: proj.githubUrl || '',
+      liveUrl: proj.liveUrl || '',
+    });
+    setShowProjectModal(true);
+  };
+
+  const handleSaveProject = async (e) => {
     e.preventDefault();
     try {
-      await createProject(newProject);
+      if (editingProjectId) {
+        await updateProject(editingProjectId, newProject);
+      } else {
+        await createProject(newProject);
+      }
       setShowProjectModal(false);
-      setNewProject({ title: '', category: 'Full Stack', type: 'Software Project', organization: '', duration: '', period: '', description: '', technologies: '', githubUrl: '', liveUrl: '' });
-      loadDashboardData();
+      setEditingProjectId(null);
+      setNewProject({
+        title: '',
+        category: 'Full Stack',
+        type: 'Software Project',
+        organization: '',
+        duration: '',
+        period: '',
+        description: '',
+        technologies: '',
+        githubUrl: '',
+        liveUrl: '',
+      });
+      await loadDashboardData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to add project');
+      console.error('Save project error:', err);
+      alert(err.response?.data?.message || err.message || 'Failed to save project');
     }
   };
 
@@ -727,7 +806,7 @@ export default function AdminDashboard() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Projects</h2>
-                  <button onClick={() => setShowProjectModal(true)} className="btn btn-primary btn-sm">
+                  <button onClick={handleOpenAddProjectModal} className="btn btn-primary btn-sm">
                     <Plus size={16} />
                     <span>Add Project</span>
                   </button>
@@ -740,10 +819,24 @@ export default function AdminDashboard() {
                         <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>{proj.category}</span>
                         <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{proj.title}</h3>
                         <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.3rem' }}>{proj.description}</p>
+                        {proj.technologies && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+                            {parseTechnologies(proj.technologies).map((tech, idx) => (
+                              <span key={idx} style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.15rem 0.5rem', borderRadius: '0.3rem', backgroundColor: 'rgba(255, 255, 255, 0.06)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <button onClick={() => handleDeleteProject(proj._id || proj.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
-                        <Trash2 size={16} />
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button onClick={() => handleEditProject(proj)} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-cyan)', borderColor: 'rgba(56, 189, 248, 0.3)' }} title="Edit Project">
+                          <Pencil size={16} />
+                        </button>
+                        <button onClick={() => handleDeleteProject(proj._id || proj.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }} title="Delete Project">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -968,21 +1061,40 @@ export default function AdminDashboard() {
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add New Software / Network Project</h3>
-              <button onClick={() => setShowProjectModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{editingProjectId ? 'Edit Project Details' : 'Add New Software / Network Project'}</h3>
+              <button onClick={() => { setShowProjectModal(false); setEditingProjectId(null); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
             </div>
-            <form onSubmit={handleAddProject} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input type="text" placeholder="Project Title" required value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <select value={newProject.category} onChange={(e) => setNewProject({ ...newProject, category: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
-                <option value="Full Stack">Full Stack</option>
-                <option value="Frontend">Frontend</option>
-                <option value="Backend">Backend</option>
-                <option value="Networking">Networking</option>
-              </select>
-              <textarea placeholder="Description" rows="3" required value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="text" placeholder="Technologies (comma separated)" value={newProject.technologies} onChange={(e) => setNewProject({ ...newProject, technologies: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <input type="url" placeholder="GitHub Repository Link" value={newProject.githubUrl} onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
-              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>Save Project</button>
+            <form onSubmit={handleSaveProject} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>Project Title</label>
+                <input type="text" placeholder="Project Title" required value={newProject.title} onChange={(e) => setNewProject({ ...newProject, title: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>Project Category</label>
+                <select value={newProject.category} onChange={(e) => setNewProject({ ...newProject, category: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                  <option value="Full Stack">Full Stack</option>
+                  <option value="Frontend">Frontend</option>
+                  <option value="Backend">Backend</option>
+                  <option value="Networking">Networking</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>Description</label>
+                <textarea placeholder="Description" rows="3" required value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>Tools & Technologies Used (comma separated)</label>
+                <input type="text" placeholder="Tools Used (e.g. React.js, Node.js, Express, MongoDB, Git, Vercel)" value={newProject.technologies} onChange={(e) => setNewProject({ ...newProject, technologies: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>GitHub Repository Link</label>
+                <input type="url" placeholder="GitHub Repository Link (e.g. https://github.com/user/repo)" value={newProject.githubUrl} onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>Vercel Live Demo Link</label>
+                <input type="url" placeholder="Vercel Live Demo Link (e.g. https://myproject.vercel.app)" value={newProject.liveUrl} onChange={(e) => setNewProject({ ...newProject, liveUrl: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
+              </div>
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem' }}>{editingProjectId ? 'Update Project' : 'Save Project'}</button>
             </form>
           </div>
         </div>

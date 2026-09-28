@@ -266,6 +266,63 @@ export const DEFAULT_EXPERIENCE = [];
 
 export const DEFAULT_PROJECTS = [
   {
+    "_id": "6aa43100671f76eb3fe3d002",
+    "title": "FoodRescue - Surplus Food Rescue Platform",
+    "type": "Software Project",
+    "organization": "",
+    "duration": "",
+    "period": "Sep 2026",
+    "description": "FoodRescue is a full-stack web platform that connects food providers with NGOs to reduce surplus food wastage. Providers can list surplus food with quantity, expiry, and pickup details, while NGOs can search, claim, and manage food pickups. The system includes role-based authentication, claim management, quantity and shortage tracking, additional food updates, and an admin dashboard for monitoring users, listings, and claims.",
+    "category": "Full Stack",
+    "technologies": [
+      "React.js",
+      "Node.js Express",
+      "MongoDB / SQLite",
+      "REST APIs",
+      "Role-Based Authentication",
+      "Claim Management",
+      "Git & GitHub"
+    ],
+    "features": [],
+    "packetTracerFeatures": [],
+    "githubUrl": "https://github.com/Ajaykumar22062006/FoodRescue",
+    "liveUrl": "https://foodrescue-web.vercel.app",
+    "certificateTitle": "",
+    "certificateType": "",
+    "createdAt": "2026-09-28T10:14:00.000Z",
+    "updatedAt": "2026-09-28T10:14:00.000Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aa43000671f76eb3fe3d001",
+    "title": "Personal Full-Stack Developer Portfolio",
+    "type": "Software Project",
+    "organization": "",
+    "duration": "",
+    "period": "Sep 2026",
+    "description": "Personal Full-Stack Developer Portfolio is a responsive web application designed to showcase my technical skills, academic background, projects, certifications, resume, and achievements. The portfolio provides an interactive and user-friendly interface with project showcases, certificate viewing, responsive design, dark/light mode, and a contact section. It demonstrates my practical knowledge of frontend and backend development, database management, REST APIs, and modern web technologies.",
+    "category": "Full Stack",
+    "technologies": [
+      "React.js",
+      "JavaScript (ES6+)",
+      "HTML5 & CSS3",
+      "Node.js Express",
+      "Python (Flask)",
+      "MongoDB / SQLite",
+      "REST APIs",
+      "Git & GitHub"
+    ],
+    "features": [],
+    "packetTracerFeatures": [],
+    "githubUrl": "https://github.com/Ajaykumar22062006/Myportfolio",
+    "liveUrl": "https://myportfolio-ajaykumar.vercel.app",
+    "certificateTitle": "",
+    "certificateType": "",
+    "createdAt": "2026-09-28T10:11:00.000Z",
+    "updatedAt": "2026-09-28T10:11:00.000Z",
+    "__v": 0
+  },
+  {
     "_id": "6aa42068671f76eb3fe3cf67",
     "title": "University Hostel Management System",
     "type": "Software Project",
@@ -275,14 +332,15 @@ export const DEFAULT_PROJECTS = [
     "description": "Developed a web-based University Hostel Management System to automate hostel administration activities,\nincluding student record management, room allocation, complaint tracking, and fee payment monitoring. The\nsystem provides real-time information through an interactive dashboard and centralized database, improving data\naccuracy, reducing manual workload, and enhancing overall hostel management efficiency.",
     "category": "Full Stack",
     "technologies": [
-      "My sql workbench",
-      "postman",
-      "git and github"
+      "MySQL Workbench",
+      "Postman",
+      "Git",
+      "GitHub"
     ],
     "features": [],
     "packetTracerFeatures": [],
     "githubUrl": "https://github.com/Ajaykumar22062006/hostel_management",
-    "liveUrl": "",
+    "liveUrl": "https://hostel-management-tcs.vercel.app",
     "certificateTitle": "",
     "certificateType": "",
     "createdAt": "2026-09-11T15:38:16.663Z",
@@ -310,7 +368,7 @@ export const DEFAULT_PROJECTS = [
     "features": [],
     "packetTracerFeatures": [],
     "githubUrl": "https://github.com/Ajaykumar22062006/Network-monitoring-analysis-system",
-    "liveUrl": "",
+    "liveUrl": "https://network-monitoring-cisco.vercel.app",
     "certificateTitle": "",
     "certificateType": "",
     "createdAt": "2026-09-11T04:14:57.792Z",
@@ -375,6 +433,24 @@ export const DEFAULT_RESUME = {
   // The public portfolio MUST always load from MongoDB via GET /resume.
   // Only the static /ajay-resume.pdf URL above is used as a last-resort fallback.
   base64Content: '',
+};
+
+const getLocalStorage = (key, fallback) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch (err) {
+    console.warn(`Error reading ${key} from localStorage:`, err);
+    return fallback;
+  }
+};
+
+const setLocalStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn(`Error writing ${key} to localStorage:`, err);
+  }
 };
 
 export const getProfile = async () => {

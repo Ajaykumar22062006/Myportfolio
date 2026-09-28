@@ -153,6 +153,36 @@ class InMemoryStore {
 
     this.projects = [
       {
+        _id: 'proj_foodrescue_1',
+        title: 'FoodRescue - Surplus Food Rescue Platform',
+        category: 'Full Stack',
+        type: 'Software Project',
+        organization: '',
+        duration: '1 Month',
+        period: 'Sep 2026',
+        description:
+          'FoodRescue is a full-stack web platform that connects food providers with NGOs to reduce surplus food wastage. Providers can list surplus food with quantity, expiry, and pickup details, while NGOs can search, claim, and manage food pickups. The system includes role-based authentication, claim management, quantity and shortage tracking, additional food updates, and an admin dashboard for monitoring users, listings, and claims.',
+        technologies: ['React.js', 'Node.js Express', 'MongoDB / SQLite', 'REST APIs', 'Role-Based Authentication', 'Claim Management', 'Git & GitHub'],
+        githubUrl: 'https://github.com/Ajaykumar22062006/FoodRescue',
+        liveUrl: '',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        _id: 'proj_portfolio_1',
+        title: 'Personal Full-Stack Developer Portfolio',
+        category: 'Full Stack',
+        type: 'Software Project',
+        organization: '',
+        duration: '1 Month',
+        period: 'Sep 2026',
+        description:
+          'Personal Full-Stack Developer Portfolio is a responsive web application designed to showcase my technical skills, academic background, projects, certifications, resume, and achievements. The portfolio provides an interactive and user-friendly interface with project showcases, certificate viewing, responsive design, dark/light mode, and a contact section. It demonstrates my practical knowledge of frontend and backend development, database management, REST APIs, and modern web technologies.',
+        technologies: ['React.js', 'Node.js Express', 'Python (Flask)', 'MongoDB / SQLite', 'HTML5/CSS3', 'REST APIs', 'Git & GitHub'],
+        githubUrl: 'https://github.com/Ajaykumar22062006/Myportfolio',
+        liveUrl: 'https://myportfolio-ajaykumar.vercel.app',
+        createdAt: new Date().toISOString(),
+      },
+      {
         _id: 'proj_tcs_1',
         title: 'University Hostel Management System',
         category: 'Full Stack',
@@ -164,7 +194,7 @@ class InMemoryStore {
           'The University Hostel Management System is a web-based application that digitizes student registration, room allocation, fee management, and complaint tracking. It reduces manual work, improves transparency, and makes hostel administration faster and more efficient.',
         technologies: ['React.js', 'Node.js Express', 'MongoDB', 'Git'],
         githubUrl: 'https://github.com/Ajaykumar22062006/hostel_management',
-        liveUrl: '',
+        liveUrl: 'https://hostel-management-tcs.vercel.app',
         createdAt: new Date().toISOString(),
       },
       {
@@ -179,7 +209,7 @@ class InMemoryStore {
           'Developed a Flask-based Network Monitoring and Analysis System with device inventory, connectivity testing, subnet calculation, ARP/MAC analysis, and system logging.',
         technologies: ['Python (Flask)', 'SQLite', 'Cisco Packet Tracer', 'IPv4/IPv6', 'VLANs', 'DHCP', 'ARP'],
         githubUrl: 'https://github.com/Ajaykumar22062006/Network-monitoring-analysis-system',
-        liveUrl: '',
+        liveUrl: 'https://network-monitoring-cisco.vercel.app',
         createdAt: new Date().toISOString(),
       },
     ];

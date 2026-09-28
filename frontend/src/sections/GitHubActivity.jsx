@@ -8,6 +8,41 @@ export default function GitHubActivity() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const FALLBACK_REPOS = [
+    {
+      id: 1,
+      name: 'FoodRescue',
+      html_url: `https://github.com/${GITHUB_USERNAME}/FoodRescue`,
+      stargazers_count: 1,
+      forks_count: 0,
+      description: 'FoodRescue is a full-stack web platform that connects food providers with NGOs to reduce surplus food wastage. Features role-based auth, claim management, quantity tracking, and admin dashboard.',
+    },
+    {
+      id: 2,
+      name: 'Myportfolio',
+      html_url: `https://github.com/${GITHUB_USERNAME}/Myportfolio`,
+      stargazers_count: 1,
+      forks_count: 0,
+      description: 'Personal Full-Stack Developer Portfolio is a responsive web application designed to showcase my technical skills, academic background, projects, certifications, resume, and achievements.',
+    },
+    {
+      id: 3,
+      name: 'hostel_management',
+      html_url: `https://github.com/${GITHUB_USERNAME}/hostel_management`,
+      stargazers_count: 1,
+      forks_count: 0,
+      description: 'The University Hostel Management System is a web-based application that digitizes student registration, room allocation, fee management, and complaint tracking.',
+    },
+    {
+      id: 4,
+      name: 'Network-monitoring-analysis-system',
+      html_url: `https://github.com/${GITHUB_USERNAME}/Network-monitoring-analysis-system`,
+      stargazers_count: 1,
+      forks_count: 0,
+      description: 'Developed a Flask-based Network Monitoring and Analysis System with device inventory, connectivity testing, subnet calculation, ARP/MAC analysis, and system logging.',
+    },
+  ];
+
   useEffect(() => {
     const fetchGitHubData = async () => {
       setLoading(true);
@@ -18,10 +53,10 @@ export default function GitHubActivity() {
           throw new Error('GitHub API rate limit or user not found');
         }
         const data = await response.json();
-        setRepos(data);
+        setRepos(data && data.length > 0 ? data : FALLBACK_REPOS);
       } catch (err) {
         console.warn('GitHub API unavailable, displaying structured placeholder state:', err);
-        setError(true);
+        setRepos(FALLBACK_REPOS);
       } finally {
         setLoading(false);
       }
@@ -31,10 +66,35 @@ export default function GitHubActivity() {
   }, []);
 
   const customRepoDescriptions = {
+    'FoodRescue':
+      'FoodRescue is a full-stack web platform that connects food providers with NGOs to reduce surplus food wastage. Providers can list surplus food with quantity, expiry, and pickup details, while NGOs can search, claim, and manage food pickups. The system includes role-based authentication, claim management, quantity and shortage tracking, additional food updates, and an admin dashboard for monitoring users, listings, and claims.',
+    'Food-rescue':
+      'FoodRescue is a full-stack web platform that connects food providers with NGOs to reduce surplus food wastage. Providers can list surplus food with quantity, expiry, and pickup details, while NGOs can search, claim, and manage food pickups. The system includes role-based authentication, claim management, quantity and shortage tracking, additional food updates, and an admin dashboard for monitoring users, listings, and claims.',
+    'food-rescue':
+      'FoodRescue is a full-stack web platform that connects food providers with NGOs to reduce surplus food wastage. Providers can list surplus food with quantity, expiry, and pickup details, while NGOs can search, claim, and manage food pickups. The system includes role-based authentication, claim management, quantity and shortage tracking, additional food updates, and an admin dashboard for monitoring users, listings, and claims.',
+    'foodrescue':
+      'FoodRescue is a full-stack web platform that connects food providers with NGOs to reduce surplus food wastage. Providers can list surplus food with quantity, expiry, and pickup details, while NGOs can search, claim, and manage food pickups. The system includes role-based authentication, claim management, quantity and shortage tracking, additional food updates, and an admin dashboard for monitoring users, listings, and claims.',
+    'Myportfolio':
+      'Personal Full-Stack Developer Portfolio is a responsive web application designed to showcase my technical skills, academic background, projects, certifications, resume, and achievements. The portfolio provides an interactive and user-friendly interface with project showcases, certificate viewing, responsive design, dark/light mode, and a contact section. It demonstrates my practical knowledge of frontend and backend development, database management, REST APIs, and modern web technologies.',
     'Network-monitoring-analysis-system':
       'Developed a Flask-based Network Monitoring and Analysis System with device inventory, connectivity testing, subnet calculation, ARP/MAC analysis, and system logging.',
     'hostel_management':
       'The University Hostel Management System is a web-based application that digitizes student registration, room allocation, fee management, and complaint tracking. It reduces manual work, improves transparency, and makes hostel administration faster and more efficient.',
+  };
+
+  const getRepoDescription = (repo) => {
+    if (!repo || !repo.name) return 'No description provided.';
+    if (customRepoDescriptions[repo.name]) return customRepoDescriptions[repo.name];
+    const norm = repo.name.toLowerCase().replace(/[-_]/g, '');
+    for (const [key, desc] of Object.entries(customRepoDescriptions)) {
+      if (key.toLowerCase().replace(/[-_]/g, '') === norm) {
+        return desc;
+      }
+    }
+    if (norm.includes('foodrescue') || norm.includes('foodrescue')) {
+      return customRepoDescriptions['FoodRescue'];
+    }
+    return repo.description || 'No description provided.';
   };
 
   return (
@@ -123,7 +183,7 @@ export default function GitHubActivity() {
                       flexGrow: 1,
                     }}
                   >
-                    {customRepoDescriptions[repo.name] || repo.description || 'No description provided.'}
+                    {getRepoDescription(repo)}
                   </p>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
