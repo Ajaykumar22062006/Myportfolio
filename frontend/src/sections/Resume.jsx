@@ -11,10 +11,9 @@ export default function Resume() {
       try {
         const data = await getResume();
         // Only set if we got valid data back (with base64 content from MongoDB)
-        if (data && data.base64Content) {
+        if (data && (data.base64Content || data.url || data.filename)) {
           setDbResume(data);
         } else {
-          // No base64 from MongoDB — fall back to static PDF
           setDbResume(DEFAULT_RESUME);
         }
       } catch (err) {

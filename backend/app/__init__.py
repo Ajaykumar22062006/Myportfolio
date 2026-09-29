@@ -61,16 +61,31 @@ def create_app():
 
     # Register Blueprints
     from app.routes.auth import auth_bp
+    from app.routes.profile import profile_bp
+    from app.routes.education import education_bp
+    from app.routes.skills import skills_bp
+    from app.routes.experience import experience_bp
     from app.routes.projects import projects_bp
     from app.routes.certificates import certificates_bp
     from app.routes.contact import contact_bp
     from app.routes.resume import resume_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(profile_bp, url_prefix='/api/profile')
+    app.register_blueprint(education_bp, url_prefix='/api/education')
+    app.register_blueprint(skills_bp, url_prefix='/api/skills')
+    app.register_blueprint(experience_bp, url_prefix='/api/experience')
     app.register_blueprint(projects_bp, url_prefix='/api/projects')
     app.register_blueprint(certificates_bp, url_prefix='/api/certificates')
     app.register_blueprint(contact_bp, url_prefix='/api/contact')
     app.register_blueprint(resume_bp, url_prefix='/api/resume')
+
+    @app.after_request
+    def add_header(response):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
 
     return app
 

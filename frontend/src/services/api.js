@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+let rawApiUrl = import.meta.env.VITE_API_URL || '';
+if (!rawApiUrl) {
+  rawApiUrl = '/api';
+} else if (!rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
+  rawApiUrl = `${rawApiUrl.replace(/\/$/, '')}/api`;
+}
+const API_BASE_URL = rawApiUrl;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -825,37 +831,34 @@ export const deleteContactMessage = async (id) => {
 };
 
 // Resume API
-// PRIORITY: MongoDB (via backend GET /resume) > DEFAULT_RESUME (static fallback)
-// Never use stale localStorage data for the public-facing resume.
+// PRIORITY: MongoDB (via backend GET /resume) > LocalStorage > DEFAULT_RESUME (static fallback)
 export const getResume = async () => {
   try {
     const res = await api.get('/resume');
-    if (res.data && res.data.base64Content) {
-      // MongoDB returned a valid resume with base64 content — use it directly.
-      return res.data;
-    }
-    if (res.data && res.data.filename) {
-      // MongoDB returned metadata only (no base64) — return what we have.
-      return res.data;
+    const resumeObj = res.data?.data || res.data;
+    if (resumeObj && (resumeObj.base64Content || resumeObj.filename)) {
+      setLocalStorage('portfolio_admin_resume', resumeObj);
+      return resumeObj;
     }
   } catch (err) {
-    // Backend unreachable — fall through to DEFAULT_RESUME.
-    console.warn('Backend GET /resume failed, using DEFAULT_RESUME fallback.', err?.message);
+    console.warn('Backend GET /resume failed, using local storage / DEFAULT_RESUME fallback.', err?.message);
   }
 
-  // Fallback: DEFAULT_RESUME (no base64Content — will use static /ajay-resume.pdf).
-  return DEFAULT_RESUME;
+  const local = getLocalStorage('portfolio_admin_resume', DEFAULT_RESUME);
+  return (local && (local.base64Content || local.filename)) ? (local.data || local) : DEFAULT_RESUME;
 };
 
 export const uploadResume = async (data) => {
-  // Do NOT cache the base64 resume in localStorage — it causes stale old-resume delivery.
-  // The backend MongoDB is the single source of truth.
+  const resumeObj = data.base64Content ? data : (data.data || data);
+  setLocalStorage('portfolio_admin_resume', resumeObj);
   try {
-    const res = await api.post('/resume', data);
-    return res.data;
+    const res = await api.post('/resume', resumeObj);
+    const savedObj = res.data?.data || res.data || resumeObj;
+    setLocalStorage('portfolio_admin_resume', savedObj);
+    return savedObj;
   } catch (err) {
-    console.warn('Backend resume upload API failed:', err);
-    return { message: 'Resume upload failed. Please try again.', data };
+    console.warn('Backend resume upload API failed, stored locally:', err);
+    return resumeObj;
   }
 };
 

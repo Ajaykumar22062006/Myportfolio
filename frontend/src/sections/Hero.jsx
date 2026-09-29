@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProfile } from '../services/api';
+import { getProfile, getResume, DEFAULT_RESUME } from '../services/api';
 import { Code, Terminal, Server, Download, ExternalLink } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../components/SocialIcons';
 
@@ -25,6 +25,50 @@ export default function Hero() {
     };
     loadProfile();
   }, []);
+
+  const handleHeroDownloadResume = async (e) => {
+    e.preventDefault();
+    try {
+      const resumeToUse = (await getResume()) || DEFAULT_RESUME;
+      const content = resumeToUse.base64Content;
+      const filename = resumeToUse.filename || 'ajay-resume.pdf';
+      const staticUrl = resumeToUse.url || resumeToUse.blobUrl || '/ajay-resume.pdf';
+
+      if (content) {
+        const parts = content.split(',');
+        if (parts.length === 2) {
+          const mimeMatch = parts[0].match(/:(.*?);/);
+          const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+          const bstr = atob(parts[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) u8arr[n] = bstr.charCodeAt(n);
+          const blob = new Blob([u8arr], { type: mime });
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+          return;
+        }
+      }
+
+      if (staticUrl) {
+        const link = document.createElement('a');
+        link.href = staticUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+    } catch (err) {
+      window.location.hash = 'resume';
+    }
+  };
 
   return (
     <section id="home" style={{ paddingTop: '8.5rem', paddingBottom: '6rem', minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
@@ -111,7 +155,7 @@ export default function Hero() {
                 <ExternalLink size={18} />
               </a>
 
-              <a href="#resume" className="btn btn-outline">
+              <a href="#resume" onClick={handleHeroDownloadResume} className="btn btn-outline">
                 <Download size={18} />
                 <span>Download Resume</span>
               </a>

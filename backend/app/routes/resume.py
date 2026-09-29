@@ -8,7 +8,9 @@ resume_bp = Blueprint('resume', __name__)
 def get_resume():
     try:
         db = current_app.config['DB']
-        resume_doc = db.resume.find_one({})
+        resume_doc = db.resume.find_one({'isCurrent': True})
+        if not resume_doc:
+            resume_doc = db.resume.find_one({}, sort=[('uploadedAt', -1)])
         if not resume_doc:
             return jsonify({'message': 'No resume uploaded yet'}), 404
             
@@ -18,6 +20,7 @@ def get_resume():
         return jsonify({'message': f'Error fetching resume: {str(e)}'}), 500
 
 @resume_bp.route('', methods=['POST'])
+@resume_bp.route('/upload', methods=['POST'])
 @token_required
 def upload_resume():
     try:
@@ -25,20 +28,26 @@ def upload_resume():
         filename = data.get('filename')
         file_type = data.get('fileType')
         base64_content = data.get('base64Content')
+        blob_url = data.get('blobUrl') or data.get('url') or ''
 
-        if not filename or not base64_content:
-            return jsonify({'message': 'Filename and base64 content are required'}), 400
+        if not filename or (not base64_content and not blob_url):
+            return jsonify({'message': 'Filename and content (base64 or blobUrl) are required'}), 400
+
+        db = current_app.config['DB']
+        # Mark previous resumes as not current
+        db.resume.update_many({}, {'$set': {'isCurrent': False}})
 
         doc = {
             'filename': filename,
             'fileType': file_type or 'application/pdf',
-            'base64Content': base64_content,
+            'base64Content': base64_content or '',
+            'url': blob_url,
+            'blobUrl': blob_url,
+            'isCurrent': True,
+            'uploadedAt': datetime.datetime.utcnow().isoformat(),
             'updatedAt': datetime.datetime.utcnow().isoformat()
         }
 
-        db = current_app.config['DB']
-        # Replace existing resume document or insert new
-        db.resume.delete_many({})
         result = db.resume.insert_one(doc)
         doc['_id'] = str(result.inserted_id)
 

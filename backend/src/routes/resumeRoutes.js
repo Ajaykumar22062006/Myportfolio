@@ -11,7 +11,10 @@ const isDbConnected = () => mongoose.connection.readyState === 1;
 router.get('/', async (req, res) => {
   try {
     if (isDbConnected()) {
-      const resume = await Resume.findOne().sort({ updatedAt: -1 });
+      let resume = await Resume.findOne({ isCurrent: true }).sort({ updatedAt: -1 });
+      if (!resume) {
+        resume = await Resume.findOne().sort({ updatedAt: -1 });
+      }
       if (resume) return res.json(resume);
     }
     const memResume = store.getResume();
@@ -24,32 +27,41 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', protectAdmin, async (req, res) => {
+const handleResumeUpload = async (req, res) => {
   try {
-    const { filename, fileType, base64Content } = req.body || {};
+    const { filename, fileType, base64Content, blobUrl, url } = req.body || {};
 
-    if (!filename || !base64Content) {
-      return res.status(400).json({ message: 'Filename and base64 content are required' });
+    if (!filename || (!base64Content && !blobUrl && !url)) {
+      return res.status(400).json({ message: 'Filename and content (base64Content or blobUrl) are required' });
     }
 
+    const fileUrl = blobUrl || url || '';
+
     if (isDbConnected()) {
-      await Resume.deleteMany({});
+      await Resume.updateMany({}, { isCurrent: false });
       const newResume = new Resume({
         filename,
         fileType: fileType || 'application/pdf',
-        base64Content,
+        base64Content: base64Content || '',
+        url: fileUrl,
+        blobUrl: fileUrl,
+        isCurrent: true,
+        uploadedAt: new Date(),
       });
 
       const saved = await newResume.save();
       return res.status(201).json({ message: 'Resume uploaded and stored in database successfully!', data: saved });
     }
 
-    const saved = store.saveResume({ filename, fileType, base64Content });
+    const saved = store.saveResume({ filename, fileType, base64Content, url: fileUrl, blobUrl: fileUrl, isCurrent: true });
     return res.status(201).json({ message: 'Resume uploaded and stored in memory successfully!', data: saved });
   } catch (error) {
     const saved = store.saveResume(req.body);
     return res.status(201).json({ message: 'Resume uploaded successfully!', data: saved });
   }
-});
+};
+
+router.post('/', protectAdmin, handleResumeUpload);
+router.post('/upload', protectAdmin, handleResumeUpload);
 
 export default router;
