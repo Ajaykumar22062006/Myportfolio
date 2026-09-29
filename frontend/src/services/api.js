@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 let rawApiUrl = import.meta.env.VITE_API_URL || '';
-if (!rawApiUrl) {
+if (!rawApiUrl || rawApiUrl.includes('your-backend-api') || rawApiUrl.includes('your-flask-backend') || rawApiUrl.includes('example.com') || rawApiUrl.includes('ACTUAL-RENDER-BACKEND')) {
   rawApiUrl = '/api';
 } else if (!rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
   rawApiUrl = `${rawApiUrl.replace(/\/$/, '')}/api`;
