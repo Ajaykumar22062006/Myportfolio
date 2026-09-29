@@ -262,7 +262,24 @@ export const DEFAULT_SKILLS = [
   }
 ];
 
-export const DEFAULT_EXPERIENCE = [];
+export const DEFAULT_EXPERIENCE = [
+  {
+    "_id": "exp_tcs_1",
+    "role": "Full-Stack Developer Intern",
+    "company": "TCS iON Applied Industry Projects (AIP)",
+    "location": "Remote",
+    "period": "Feb 2026 – May 2026",
+    "type": "Industry Internship",
+    "description": "Developed and implemented the University Hostel Management System digitizing student allocation, room records, fee payment tracking, and admin dashboards.",
+    "highlights": [
+      "Engineered RESTful endpoints using Node.js, Express, and MongoDB Mongoose schemas.",
+      "Built responsive React frontend dashboards with glassmorphism UI components and Redux Toolkit state."
+    ],
+    "skills": ["React.js", "Node.js", "Express", "MongoDB"],
+    "createdAt": "2026-09-11T00:00:00.000Z",
+    "updatedAt": "2026-09-11T00:00:00.000Z"
+  }
+];
 
 export const DEFAULT_PROJECTS = [
   {
