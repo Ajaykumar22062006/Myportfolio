@@ -71,8 +71,23 @@ export default function Resume() {
             document.body.removeChild(link);
             setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
           } else {
-            const win = window.open(blobUrl, '_blank');
-            if (!win) window.location.href = blobUrl;
+            const win = window.open('', '_blank');
+            if (win) {
+              win.document.title = filename;
+              win.document.body.style.margin = '0';
+              win.document.body.style.height = '100vh';
+              win.document.body.style.overflow = 'hidden';
+              win.document.body.style.backgroundColor = '#525659';
+
+              const iframe = win.document.createElement('iframe');
+              iframe.src = blobUrl;
+              iframe.style.width = '100%';
+              iframe.style.height = '100%';
+              iframe.style.border = 'none';
+              win.document.body.appendChild(iframe);
+            } else {
+              window.location.href = blobUrl;
+            }
           }
           return;
         }
