@@ -59,12 +59,17 @@ router.put('/:id', protectAdmin, async (req, res) => {
 router.delete('/:id', protectAdmin, async (req, res) => {
   try {
     store.deleteCertificate(req.params.id);
-    if (isDbConnected() && isValidObjectId(req.params.id)) {
-      await Certificate.findByIdAndDelete(req.params.id);
+    if (isDbConnected()) {
+      if (isValidObjectId(req.params.id)) {
+        await Certificate.findByIdAndDelete(req.params.id);
+      } else {
+        await Certificate.deleteOne({ _id: req.params.id });
+      }
     }
     return res.json({ message: 'Certificate deleted successfully' });
   } catch (error) {
-    return res.json({ message: 'Certificate deleted successfully' });
+    console.error('Delete certificate error:', error);
+    return res.status(500).json({ message: error.message || 'Failed to delete certificate' });
   }
 });
 

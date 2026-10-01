@@ -539,9 +539,12 @@ export const updateEducation = async (id, data) => {
 };
 
 export const deleteEducation = async (id) => {
-  const current = await getEducation();
-  const updated = current.filter((item) => (item._id || item.id) !== id);
-  setLocalStorage('portfolio_admin_education', updated);
+  try {
+    const current = await getEducation();
+    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+    setLocalStorage('portfolio_admin_education', updated);
+  } catch (e) {}
+
   try {
     const res = await api.delete(`/education/${id}`);
     return res.data;
@@ -590,9 +593,12 @@ export const updateSkill = async (id, data) => {
 };
 
 export const deleteSkill = async (id) => {
-  const current = await getSkills();
-  const updated = current.filter((item) => (item._id || item.id) !== id);
-  setLocalStorage('portfolio_admin_skills', updated);
+  try {
+    const current = await getSkills();
+    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+    setLocalStorage('portfolio_admin_skills', updated);
+  } catch (e) {}
+
   try {
     const res = await api.delete(`/skills/${id}`);
     return res.data;
@@ -641,9 +647,12 @@ export const updateExperience = async (id, data) => {
 };
 
 export const deleteExperience = async (id) => {
-  const current = await getExperience();
-  const updated = current.filter((item) => (item._id || item.id) !== id);
-  setLocalStorage('portfolio_admin_experience', updated);
+  try {
+    const current = await getExperience();
+    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+    setLocalStorage('portfolio_admin_experience', updated);
+  } catch (e) {}
+
   try {
     const res = await api.delete(`/experience/${id}`);
     return res.data;
@@ -692,9 +701,12 @@ export const updateProject = async (id, data) => {
 };
 
 export const deleteProject = async (id) => {
-  const current = await getProjects();
-  const updated = current.filter((item) => (item._id || item.id) !== id);
-  setLocalStorage('portfolio_admin_projects', updated);
+  try {
+    const current = await getProjects();
+    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+    setLocalStorage('portfolio_admin_projects', updated);
+  } catch (e) {}
+
   try {
     const res = await api.delete(`/projects/${id}`);
     return res.data;
@@ -743,9 +755,12 @@ export const updateCertificate = async (id, data) => {
 };
 
 export const deleteCertificate = async (id) => {
-  const current = await getCertificates();
-  const updated = current.filter((item) => (item._id || item.id) !== id);
-  setLocalStorage('portfolio_admin_certificates', updated);
+  try {
+    const current = await getCertificates();
+    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+    setLocalStorage('portfolio_admin_certificates', updated);
+  } catch (e) {}
+
   try {
     const res = await api.delete(`/certificates/${id}`);
     return res.data;

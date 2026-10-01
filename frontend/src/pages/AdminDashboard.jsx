@@ -506,12 +506,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteCertificate = async (id) => {
+    if (!id) return;
     if (window.confirm('Delete this certificate?')) {
       try {
+        setCertificatesList((prev) => prev.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id)));
         await deleteCertificate(id);
-        setCertificatesList((prev) => prev.filter((item) => item._id !== id && item.id !== id));
-        loadDashboardData();
       } catch (err) {
+        console.error('Failed to delete certificate:', err);
         alert('Failed to delete certificate');
       }
     }
