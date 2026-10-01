@@ -540,9 +540,10 @@ export default function AdminDashboard() {
     const validTypes = [
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
       'text/plain',
     ];
-    if (!validTypes.includes(file.type)) {
+    if (file.type && !validTypes.includes(file.type) && !file.name.endsWith('.pdf') && !file.name.endsWith('.docx') && !file.name.endsWith('.doc') && !file.name.endsWith('.txt')) {
       setResumeErrorMsg('Please select a valid PDF, DOCX, or TXT document');
       return;
     }
@@ -550,31 +551,48 @@ export default function AdminDashboard() {
     setSelectedResumeFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setResumeBase64(reader.result);
+      setResumeBase64(reader.result || '');
     };
     reader.readAsDataURL(file);
   };
 
   const handleUploadResumeSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedResumeFile || !resumeBase64) {
+    setResumeSuccessMsg('');
+    setResumeErrorMsg('');
+
+    if (!selectedResumeFile) {
       setResumeErrorMsg('Please select a document file to upload');
       return;
     }
+
     setResumeUploading(true);
-    setResumeErrorMsg('');
+
     try {
+      let base64 = resumeBase64;
+      if (!base64 && selectedResumeFile) {
+        base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedResumeFile);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (err) => reject(err);
+        });
+      }
+
       const res = await uploadResume({
         filename: selectedResumeFile.name,
-        fileType: selectedResumeFile.type,
-        base64Content: resumeBase64,
+        fileType: selectedResumeFile.type || 'application/pdf',
+        base64Content: base64,
       });
-      setCurrentResume(res.resume || res);
+
+      const savedObj = res?.data || res?.resume || res;
+      setCurrentResume(savedObj);
       setResumeSuccessMsg('Resume updated & saved successfully!');
       setSelectedResumeFile(null);
       setResumeBase64('');
     } catch (err) {
-      setResumeErrorMsg('Failed to upload resume document');
+      console.error('Resume upload submit error:', err);
+      setResumeErrorMsg(err.message || 'Failed to upload resume document');
     } finally {
       setResumeUploading(false);
     }
@@ -907,9 +925,27 @@ export default function AdminDashboard() {
                   <span>Upload & Update Resume File</span>
                 </h2>
 
+                {currentResume && currentResume.filename && (
+                  <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.85rem 1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '0.25rem' }}>Current Active Resume in Backend:</div>
+                    <div style={{ color: 'var(--text-primary)' }}>📄 {currentResume.filename}</div>
+                    {currentResume.uploadedAt && (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                        Uploaded: {new Date(currentResume.uploadedAt).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {resumeSuccessMsg && (
                   <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '0.85rem 1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
                     {resumeSuccessMsg}
+                  </div>
+                )}
+
+                {resumeErrorMsg && (
+                  <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f43f5e', padding: '0.85rem 1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+                    {resumeErrorMsg}
                   </div>
                 )}
 

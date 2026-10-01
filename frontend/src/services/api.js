@@ -831,34 +831,52 @@ export const deleteContactMessage = async (id) => {
 };
 
 // Resume API
-// PRIORITY: MongoDB (via backend GET /resume) > LocalStorage > DEFAULT_RESUME (static fallback)
 export const getResume = async () => {
   try {
     const res = await api.get('/resume');
     const resumeObj = res.data?.data || res.data;
-    if (resumeObj && (resumeObj.base64Content || resumeObj.filename)) {
+    if (resumeObj && (resumeObj.base64Content || resumeObj.filename || resumeObj.url)) {
       setLocalStorage('portfolio_admin_resume', resumeObj);
       return resumeObj;
     }
+    return null;
   } catch (err) {
-    console.warn('Backend GET /resume failed, using local storage / DEFAULT_RESUME fallback.', err?.message);
+    if (err.response?.status === 404) {
+      console.log('No resume found on backend GET /resume (404)');
+      return null;
+    }
+    console.error('Backend GET /resume failed:', err?.response?.data?.message || err?.message);
+    return null;
   }
-
-  const local = getLocalStorage('portfolio_admin_resume', DEFAULT_RESUME);
-  return (local && (local.base64Content || local.filename)) ? (local.data || local) : DEFAULT_RESUME;
 };
 
 export const uploadResume = async (data) => {
-  const resumeObj = data.base64Content ? data : (data.data || data);
-  setLocalStorage('portfolio_admin_resume', resumeObj);
   try {
-    const res = await api.post('/resume', resumeObj);
-    const savedObj = res.data?.data || res.data || resumeObj;
-    setLocalStorage('portfolio_admin_resume', savedObj);
+    let payload = data;
+    let headers = {};
+
+    if (data instanceof FormData) {
+      headers['Content-Type'] = 'multipart/form-data';
+    }
+
+    const res = await api.post('/resume', payload, {
+      headers,
+      timeout: 30000,
+    });
+
+    const savedObj = res.data?.data || res.data;
+    if (savedObj && typeof savedObj === 'object') {
+      setLocalStorage('portfolio_admin_resume', savedObj);
+    }
     return savedObj;
   } catch (err) {
-    console.warn('Backend resume upload API failed, stored locally:', err);
-    return resumeObj;
+    const errorMsg =
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      err.message ||
+      'Failed to upload resume to backend';
+    console.error('Backend resume upload API failed:', errorMsg);
+    throw new Error(errorMsg);
   }
 };
 
