@@ -79,12 +79,24 @@ router.put('/:id', protectAdmin, async (req, res) => {
 
 router.delete('/:id', protectAdmin, async (req, res) => {
   try {
-    store.deleteProject(req.params.id);
+    const { id } = req.params;
+    store.deleteProject(id);
+
     if (isDbConnected()) {
-      if (isValidObjectId(req.params.id)) {
-        await Project.findByIdAndDelete(req.params.id);
-      } else {
-        await Project.deleteMany({ title: new RegExp(req.params.id.replace(/_/g, ' '), 'i') });
+      try {
+        if (isValidObjectId(id)) {
+          await Project.findByIdAndDelete(id);
+        } else {
+          await Project.deleteMany({
+            $or: [
+              { _id: id },
+              { id: id },
+              { title: new RegExp(id.replace(/_/g, ' '), 'i') },
+            ],
+          }).catch(() => {});
+        }
+      } catch (dbErr) {
+        console.warn('DB delete project error:', dbErr.message);
       }
     }
     return res.json({ message: 'Project deleted successfully' });
