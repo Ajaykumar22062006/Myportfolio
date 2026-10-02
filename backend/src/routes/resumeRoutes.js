@@ -27,6 +27,41 @@ router.get('/', async (req, res) => {
   }
 });
 
+const serveRawResumeFile = async (req, res, isDownload = false) => {
+  try {
+    let resume = null;
+    if (isDbConnected()) {
+      resume = await Resume.findOne({ isCurrent: true }).sort({ updatedAt: -1 });
+      if (!resume) {
+        resume = await Resume.findOne().sort({ updatedAt: -1 });
+      }
+    }
+    if (!resume) {
+      resume = store.getResume();
+    }
+
+    if (!resume || !resume.base64Content) {
+      return res.status(404).json({ message: 'No resume file available' });
+    }
+
+    const base64Data = resume.base64Content.replace(/^data:.*?;base64,/, '').replace(/\s/g, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filename = resume.filename || 'ajay-resume.pdf';
+    const mimeType = resume.fileType || 'application/pdf';
+
+    const disposition = isDownload ? 'attachment' : 'inline';
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    return res.send(buffer);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error serving resume file', error: error.message });
+  }
+};
+
+router.get('/file', (req, res) => serveRawResumeFile(req, res, false));
+router.get('/download', (req, res) => serveRawResumeFile(req, res, true));
+
 const handleResumeUpload = async (req, res) => {
   try {
     const { filename, fileType, base64Content, blobUrl, url } = req.body || {};
@@ -36,6 +71,9 @@ const handleResumeUpload = async (req, res) => {
     }
 
     const fileUrl = blobUrl || url || '';
+
+    // Always update memory store as fallback
+    store.saveResume({ filename, fileType, base64Content, url: fileUrl, blobUrl: fileUrl, isCurrent: true });
 
     if (isDbConnected()) {
       await Resume.updateMany({}, { isCurrent: false });
@@ -53,7 +91,7 @@ const handleResumeUpload = async (req, res) => {
       return res.status(201).json({ message: 'Resume uploaded and stored in database successfully!', data: saved });
     }
 
-    const saved = store.saveResume({ filename, fileType, base64Content, url: fileUrl, blobUrl: fileUrl, isCurrent: true });
+    const saved = store.getResume();
     return res.status(201).json({ message: 'Resume uploaded and stored in memory successfully!', data: saved });
   } catch (error) {
     const saved = store.saveResume(req.body);

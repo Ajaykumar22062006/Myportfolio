@@ -1,11 +1,24 @@
 import axios from 'axios';
 
-let rawApiUrl = import.meta.env.VITE_API_URL || '';
-if (!rawApiUrl || rawApiUrl.includes('your-backend-api') || rawApiUrl.includes('your-flask-backend') || rawApiUrl.includes('example.com') || rawApiUrl.includes('ACTUAL-RENDER-BACKEND')) {
-  rawApiUrl = '/api';
-} else if (!rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
+let rawApiUrl = import.meta.env.VITE_API_URL || 'https://ajayportfolio-backend.vercel.app';
+
+// Sanitize & guard against invalid dashboard URLs, old Render URLs, or placeholder strings
+if (
+  !rawApiUrl ||
+  rawApiUrl.includes('your-backend-api') ||
+  rawApiUrl.includes('your-flask-backend') ||
+  rawApiUrl.includes('example.com') ||
+  rawApiUrl.includes('ACTUAL-RENDER-BACKEND') ||
+  rawApiUrl.includes('vercel.com/ajay-227d') ||
+  rawApiUrl.includes('onrender.com')
+) {
+  rawApiUrl = 'https://ajayportfolio-backend.vercel.app';
+}
+
+if (!rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
   rawApiUrl = `${rawApiUrl.replace(/\/$/, '')}/api`;
 }
+
 const API_BASE_URL = rawApiUrl;
 
 const api = axios.create({
@@ -13,7 +26,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 5000,
+  timeout: 15000,
 });
 
 api.interceptors.request.use((config) => {
@@ -845,23 +858,49 @@ export const deleteContactMessage = async (id) => {
   }
 };
 
+// Helper to robustly convert Base64 string to a Blob URL (handles with or without data URI header)
+export const getBlobUrlFromBase64 = (content, defaultMime = 'application/pdf') => {
+  if (!content || typeof content !== 'string') return null;
+  try {
+    let mime = defaultMime;
+    let base64Data = content;
+
+    if (content.includes(',')) {
+      const parts = content.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      if (mimeMatch) mime = mimeMatch[1];
+      base64Data = parts[1];
+    }
+
+    // Clean whitespace and linebreaks
+    base64Data = base64Data.replace(/\s/g, '');
+
+    const bstr = atob(base64Data);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const blob = new Blob([u8arr], { type: mime });
+    return URL.createObjectURL(blob);
+  } catch (err) {
+    console.error('getBlobUrlFromBase64 failed:', err);
+    return null;
+  }
+};
+
 // Resume API
 export const getResume = async () => {
   try {
     const res = await api.get('/resume');
     const resumeObj = res.data?.data || res.data;
-    if (resumeObj && (resumeObj.base64Content || resumeObj.filename || resumeObj.url)) {
-      setLocalStorage('portfolio_admin_resume', resumeObj);
+    if (resumeObj && (resumeObj.base64Content || resumeObj.filename || resumeObj.url || resumeObj.blobUrl)) {
       return resumeObj;
     }
     return null;
   } catch (err) {
-    if (err.response?.status === 404) {
-      console.log('No resume found on backend GET /resume (404)');
-      return null;
-    }
     console.error('Backend GET /resume failed:', err?.response?.data?.message || err?.message);
-    return null;
+    throw err;
   }
 };
 

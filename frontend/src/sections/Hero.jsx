@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProfile, getResume, DEFAULT_RESUME } from '../services/api';
+import { getProfile, getResume, getBlobUrlFromBase64 } from '../services/api';
 import { Code, Terminal, Server, Download, ExternalLink } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../components/SocialIcons';
 
@@ -29,22 +29,19 @@ export default function Hero() {
   const handleHeroDownloadResume = async (e) => {
     e.preventDefault();
     try {
-      const resumeToUse = (await getResume()) || DEFAULT_RESUME;
+      const resumeToUse = await getResume();
+      if (!resumeToUse) {
+        window.location.hash = 'resume';
+        return;
+      }
+
       const content = resumeToUse.base64Content;
       const filename = resumeToUse.filename || 'ajay-resume.pdf';
-      const staticUrl = resumeToUse.url || resumeToUse.blobUrl || '/ajay-resume.pdf';
+      const remoteUrl = resumeToUse.url || resumeToUse.blobUrl;
 
       if (content) {
-        const parts = content.split(',');
-        if (parts.length === 2) {
-          const mimeMatch = parts[0].match(/:(.*?);/);
-          const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
-          const bstr = atob(parts[1]);
-          let n = bstr.length;
-          const u8arr = new Uint8Array(n);
-          while (n--) u8arr[n] = bstr.charCodeAt(n);
-          const blob = new Blob([u8arr], { type: mime });
-          const blobUrl = URL.createObjectURL(blob);
+        const blobUrl = getBlobUrlFromBase64(content, resumeToUse.fileType || 'application/pdf');
+        if (blobUrl) {
           const link = document.createElement('a');
           link.href = blobUrl;
           link.download = filename;
@@ -56,15 +53,17 @@ export default function Hero() {
         }
       }
 
-      if (staticUrl) {
+      if (remoteUrl && typeof remoteUrl === 'string' && remoteUrl.trim() !== '' && !remoteUrl.includes('/ajay-resume.pdf')) {
         const link = document.createElement('a');
-        link.href = staticUrl;
+        link.href = remoteUrl;
         link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         return;
       }
+
+      window.location.hash = 'resume';
     } catch (err) {
       window.location.hash = 'resume';
     }
