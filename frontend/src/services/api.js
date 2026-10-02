@@ -858,33 +858,44 @@ export const deleteContactMessage = async (id) => {
   }
 };
 
-// Helper to robustly convert Base64 string to a Blob URL (handles with or without data URI header)
+// Helper to robustly convert Base64 data URI or raw string to a Blob URL
 export const getBlobUrlFromBase64 = (content, defaultMime = 'application/pdf') => {
   if (!content || typeof content !== 'string') return null;
   try {
     let mime = defaultMime;
-    let base64Data = content;
+    let base64Data = content.trim();
 
-    if (content.includes(',')) {
-      const parts = content.split(',');
-      const mimeMatch = parts[0].match(/:(.*?);/);
-      if (mimeMatch) mime = mimeMatch[1];
-      base64Data = parts[1];
+    if (base64Data.startsWith('data:')) {
+      const commaIndex = base64Data.indexOf(',');
+      if (commaIndex !== -1) {
+        const header = base64Data.substring(0, commaIndex);
+        const mimeMatch = header.match(/:(.*?);/);
+        if (mimeMatch && mimeMatch[1]) {
+          mime = mimeMatch[1];
+        }
+        base64Data = base64Data.substring(commaIndex + 1);
+      }
     }
 
     // Clean whitespace and linebreaks
-    base64Data = base64Data.replace(/\s/g, '');
+    base64Data = base64Data.replace(/[\s\r\n]/g, '');
 
-    const bstr = atob(base64Data);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
+    // Add padding if missing
+    while (base64Data.length % 4 !== 0) {
+      base64Data += '=';
     }
-    const blob = new Blob([u8arr], { type: mime });
+
+    const binaryString = window.atob(base64Data);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: mime });
     return URL.createObjectURL(blob);
   } catch (err) {
-    console.error('getBlobUrlFromBase64 failed:', err);
+    console.error('getBlobUrlFromBase64 error:', err);
     return null;
   }
 };
@@ -895,13 +906,24 @@ export const getResume = async () => {
     const res = await api.get('/resume');
     const resumeObj = res.data?.data || res.data;
     if (resumeObj && (resumeObj.base64Content || resumeObj.filename || resumeObj.url || resumeObj.blobUrl)) {
+      setLocalStorage('portfolio_admin_resume', resumeObj);
       return resumeObj;
     }
-    return null;
   } catch (err) {
-    console.error('Backend GET /resume failed:', err?.response?.data?.message || err?.message);
-    throw err;
+    console.warn('Backend GET /resume failed, checking local cache fallback...', err?.response?.data?.message || err?.message);
   }
+
+  const cached = getLocalStorage('portfolio_admin_resume');
+  if (cached && (cached.base64Content || cached.filename || cached.url)) {
+    return cached;
+  }
+
+  return {
+    _id: 'resume_active',
+    filename: 'ajay-resume.pdf',
+    fileType: 'application/pdf',
+    url: '/ajay-resume.pdf',
+  };
 };
 
 export const uploadResume = async (data) => {

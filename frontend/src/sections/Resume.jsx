@@ -1,103 +1,78 @@
 import { useState, useEffect } from 'react';
 import { getResume, getBlobUrlFromBase64 } from '../services/api';
-import { FileText, Download, ExternalLink, AlertCircle } from 'lucide-react';
+import { FileText, Download, ExternalLink } from 'lucide-react';
 
 export default function Resume() {
   const [dbResume, setDbResume] = useState(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
+    let createdBlobUrl = null;
+
     const fetchDbResume = async () => {
       setLoading(true);
-      setErrorMsg(null);
       try {
         const data = await getResume();
-        if (data && (data.base64Content || data.url || data.blobUrl || data.filename)) {
-          setDbResume(data);
-          setErrorMsg(null);
+        const activeData = data || {
+          filename: 'ajay-resume.pdf',
+          fileType: 'application/pdf',
+          url: '/ajay-resume.pdf',
+        };
+
+        setDbResume(activeData);
+
+        // Priority 1: Convert base64Content to PDF Blob URL if available
+        if (activeData.base64Content && typeof activeData.base64Content === 'string' && activeData.base64Content.trim() !== '') {
+          const blobUrl = getBlobUrlFromBase64(activeData.base64Content, activeData.fileType || 'application/pdf');
+          if (blobUrl) {
+            createdBlobUrl = blobUrl;
+            setPdfBlobUrl(blobUrl);
+          } else {
+            setPdfBlobUrl(activeData.url || activeData.blobUrl || '/ajay-resume.pdf');
+          }
         } else {
-          setDbResume(null);
-          setErrorMsg('No active resume document found on the production backend.');
+          // Priority 2: Remote URL or Static PDF URL
+          setPdfBlobUrl(activeData.url || activeData.blobUrl || '/ajay-resume.pdf');
         }
       } catch (err) {
-        console.error('getResume failed in Resume.jsx:', err);
-        setDbResume(null);
-        setErrorMsg('Failed to retrieve active resume from production backend (GET /api/resume).');
+        console.error('fetchDbResume error in Resume.jsx:', err);
+        setDbResume({
+          filename: 'ajay-resume.pdf',
+          fileType: 'application/pdf',
+          url: '/ajay-resume.pdf',
+        });
+        setPdfBlobUrl('/ajay-resume.pdf');
       } finally {
         setLoading(false);
       }
     };
+
     fetchDbResume();
+
+    // Revoke object URL when component unmounts to prevent memory leaks
+    return () => {
+      if (createdBlobUrl && createdBlobUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(createdBlobUrl);
+      }
+    };
   }, []);
 
-  const openOrDownloadResume = (isDownload = false) => {
-    if (!dbResume) {
-      alert(errorMsg || 'No active resume available from the production backend.');
-      return;
-    }
-
-    const content = dbResume.base64Content;
-    const filename = dbResume.filename || 'ajay-resume.pdf';
-    const remoteUrl = dbResume.url || dbResume.blobUrl;
-
-    // 1. Convert Base64Content to PDF Blob URL if available
-    if (content && typeof content === 'string' && content.trim() !== '') {
-      if (content.startsWith('data:text/html')) {
-        const htmlText = decodeURIComponent(content.replace('data:text/html;charset=utf-8,', ''));
-        const win = window.open('', '_blank');
-        if (win) {
-          win.document.open();
-          win.document.write(htmlText);
-          win.document.close();
-          if (isDownload) setTimeout(() => win.print(), 500);
-          return;
-        }
-      }
-
-      const blobUrl = getBlobUrlFromBase64(content, dbResume.fileType || 'application/pdf');
-      if (blobUrl) {
-        if (isDownload) {
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-        } else {
-          const win = window.open(blobUrl, '_blank');
-          if (!win) window.location.href = blobUrl;
-        }
-        return;
-      }
-    }
-
-    // 2. Fallback to direct remote URL if backend provided one
-    if (remoteUrl && typeof remoteUrl === 'string' && remoteUrl.trim() !== '' && !remoteUrl.includes('/ajay-resume.pdf')) {
-      if (isDownload) {
-        const link = document.createElement('a');
-        link.href = remoteUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        const win = window.open(remoteUrl, '_blank');
-        if (!win) window.location.href = remoteUrl;
-      }
-      return;
-    }
-
-    alert('Resume content is currently unavailable.');
+  const handleViewResume = () => {
+    const targetUrl = pdfBlobUrl || dbResume?.url || dbResume?.blobUrl || '/ajay-resume.pdf';
+    const win = window.open(targetUrl, '_blank');
+    if (!win) window.location.href = targetUrl;
   };
 
   const handleDownloadResume = () => {
-    openOrDownloadResume(true);
-  };
-
-  const handleViewResume = () => {
-    openOrDownloadResume(false);
+    const targetUrl = pdfBlobUrl || dbResume?.url || dbResume?.blobUrl || '/ajay-resume.pdf';
+    const filename = dbResume?.filename || 'ajay-resume.pdf';
+    const link = document.createElement('a');
+    link.href = targetUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -148,28 +123,21 @@ export default function Resume() {
             Download my resume to explore my skills, projects, education, and certifications in detail.
           </p>
 
-          {!loading && dbResume && (
+          {!loading && (
             <div style={{ marginBottom: '1.5rem' }}>
               <span className="section-tag" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.3)', color: '#10b981' }}>
-                ✓ Resume Loaded from Backend: {dbResume.filename || 'ajay-resume.pdf'}
+                ✓ Resume Ready: {dbResume?.filename || 'ajay-resume.pdf'}
               </span>
             </div>
           )}
 
-          {!loading && errorMsg && (
-            <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <AlertCircle size={18} color="#ef4444" />
-              <span style={{ color: '#ef4444', fontSize: '0.95rem' }}>{errorMsg}</span>
-            </div>
-          )}
-
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
-            <button onClick={handleViewResume} className="btn btn-outline" disabled={loading || !dbResume}>
+            <button onClick={handleViewResume} className="btn btn-outline" disabled={loading}>
               <ExternalLink size={18} />
               <span>View Resume</span>
             </button>
 
-            <button onClick={handleDownloadResume} className="btn btn-primary" disabled={loading || !dbResume}>
+            <button onClick={handleDownloadResume} className="btn btn-primary" disabled={loading}>
               <Download size={18} />
               <span>Download Resume</span>
             </button>
