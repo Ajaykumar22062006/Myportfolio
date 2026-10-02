@@ -247,8 +247,8 @@ class InMemoryStore {
     const highlights = Array.isArray(data.highlights)
       ? data.highlights
       : data.highlights
-      ? data.highlights.split('\n').filter(Boolean)
-      : this.education[idx].highlights;
+        ? data.highlights.split('\n').filter(Boolean)
+        : this.education[idx].highlights;
     this.education[idx] = { ...this.education[idx], ...data, highlights };
     return this.education[idx];
   }
@@ -306,13 +306,13 @@ class InMemoryStore {
     const highlights = Array.isArray(data.highlights)
       ? data.highlights
       : data.highlights
-      ? data.highlights.split('\n').filter(Boolean)
-      : this.experience[idx].highlights;
+        ? data.highlights.split('\n').filter(Boolean)
+        : this.experience[idx].highlights;
     const skills = Array.isArray(data.skills)
       ? data.skills
       : data.skills
-      ? data.skills.split(',').map((s) => s.trim())
-      : this.experience[idx].skills;
+        ? data.skills.split(',').map((s) => s.trim())
+        : this.experience[idx].skills;
     this.experience[idx] = { ...this.experience[idx], ...data, highlights, skills };
     return this.experience[idx];
   }
@@ -367,8 +367,8 @@ class InMemoryStore {
       technologies: Array.isArray(data.technologies)
         ? data.technologies
         : data.technologies
-        ? data.technologies.split(',').map((t) => t.trim())
-        : [],
+          ? data.technologies.split(',').map((t) => t.trim())
+          : [],
       createdAt: new Date().toISOString(),
     };
     this.projects.unshift(proj);
@@ -380,8 +380,8 @@ class InMemoryStore {
     const technologies = Array.isArray(data.technologies)
       ? data.technologies
       : data.technologies
-      ? data.technologies.split(',').map((t) => t.trim())
-      : this.projects[idx].technologies;
+        ? data.technologies.split(',').map((t) => t.trim())
+        : this.projects[idx].technologies;
     this.projects[idx] = { ...this.projects[idx], ...data, technologies };
     return this.projects[idx];
   }

@@ -58,25 +58,12 @@ router.put('/:id', protectAdmin, async (req, res) => {
 
 router.delete('/:id', protectAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    store.deleteCertificate(id);
-
+    store.deleteCertificate(req.params.id);
     if (isDbConnected()) {
-      try {
-        if (isValidObjectId(id)) {
-          await Certificate.findByIdAndDelete(id);
-        } else {
-          await Certificate.deleteMany({
-            $or: [
-              { _id: id },
-              { id: id },
-              { title: new RegExp(id.replace(/_/g, ' '), 'i') },
-              { organization: new RegExp(id.replace(/_/g, ' '), 'i') },
-            ],
-          }).catch(() => {});
-        }
-      } catch (dbErr) {
-        console.warn('DB delete error, deleted from memory store:', dbErr.message);
+      if (isValidObjectId(req.params.id)) {
+        await Certificate.findByIdAndDelete(req.params.id);
+      } else {
+        await Certificate.deleteOne({ _id: req.params.id });
       }
     }
     return res.json({ message: 'Certificate deleted successfully' });

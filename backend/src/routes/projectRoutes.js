@@ -41,8 +41,8 @@ router.post('/', protectAdmin, async (req, res) => {
     const technologies = Array.isArray(req.body.technologies)
       ? req.body.technologies
       : typeof req.body.technologies === 'string'
-      ? req.body.technologies.split(',').map((s) => s.trim()).filter(Boolean)
-      : [];
+        ? req.body.technologies.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
 
     const payload = { ...req.body, technologies };
     const memSaved = store.addProject(payload);
@@ -79,24 +79,12 @@ router.put('/:id', protectAdmin, async (req, res) => {
 
 router.delete('/:id', protectAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    store.deleteProject(id);
-
+    store.deleteProject(req.params.id);
     if (isDbConnected()) {
-      try {
-        if (isValidObjectId(id)) {
-          await Project.findByIdAndDelete(id);
-        } else {
-          await Project.deleteMany({
-            $or: [
-              { _id: id },
-              { id: id },
-              { title: new RegExp(id.replace(/_/g, ' '), 'i') },
-            ],
-          }).catch(() => {});
-        }
-      } catch (dbErr) {
-        console.warn('DB delete project error:', dbErr.message);
+      if (isValidObjectId(req.params.id)) {
+        await Project.findByIdAndDelete(req.params.id);
+      } else {
+        await Project.deleteMany({ title: new RegExp(req.params.id.replace(/_/g, ' '), 'i') });
       }
     }
     return res.json({ message: 'Project deleted successfully' });

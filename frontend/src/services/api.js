@@ -521,11 +521,9 @@ export const getEducation = async () => {
       return res.data;
     }
   } catch (err) {
-    console.warn('Backend education API unavailable, using local storage.');
+    console.warn('Backend education API unavailable, using local storage / defaults.');
   }
-  const cached = getLocalStorage('portfolio_admin_education', null);
-  if (Array.isArray(cached)) return cached;
-  return DEFAULT_EDUCATION;
+  return getLocalStorage('portfolio_admin_education', DEFAULT_EDUCATION);
 };
 
 export const createEducation = async (data) => {
@@ -555,19 +553,13 @@ export const updateEducation = async (id, data) => {
 
 export const deleteEducation = async (id) => {
   try {
-    const current = getLocalStorage('portfolio_admin_education', []);
+    const current = await getEducation();
     const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
     setLocalStorage('portfolio_admin_education', updated);
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const res = await api.delete(`/education/${id}`);
-    try {
-      const freshRes = await api.get('/education');
-      if (Array.isArray(freshRes.data)) {
-        setLocalStorage('portfolio_admin_education', freshRes.data);
-      }
-    } catch (fErr) {}
     return res.data;
   } catch (err) {
     return { message: 'Deleted successfully' };
@@ -583,11 +575,9 @@ export const getSkills = async () => {
       return res.data;
     }
   } catch (err) {
-    console.warn('Backend skills API unavailable, using local storage.');
+    console.warn('Backend skills API unavailable, using local storage / defaults.');
   }
-  const cached = getLocalStorage('portfolio_admin_skills', null);
-  if (Array.isArray(cached)) return cached;
-  return DEFAULT_SKILLS;
+  return getLocalStorage('portfolio_admin_skills', DEFAULT_SKILLS);
 };
 
 export const createSkill = async (data) => {
@@ -617,19 +607,13 @@ export const updateSkill = async (id, data) => {
 
 export const deleteSkill = async (id) => {
   try {
-    const current = getLocalStorage('portfolio_admin_skills', []);
+    const current = await getSkills();
     const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
     setLocalStorage('portfolio_admin_skills', updated);
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const res = await api.delete(`/skills/${id}`);
-    try {
-      const freshRes = await api.get('/skills');
-      if (Array.isArray(freshRes.data)) {
-        setLocalStorage('portfolio_admin_skills', freshRes.data);
-      }
-    } catch (fErr) {}
     return res.data;
   } catch (err) {
     return { message: 'Deleted successfully' };
@@ -645,11 +629,9 @@ export const getExperience = async () => {
       return res.data;
     }
   } catch (err) {
-    console.warn('Backend experience API unavailable, using local storage.');
+    console.warn('Backend experience API unavailable, using local storage / defaults.');
   }
-  const cached = getLocalStorage('portfolio_admin_experience', null);
-  if (Array.isArray(cached)) return cached;
-  return DEFAULT_EXPERIENCE;
+  return getLocalStorage('portfolio_admin_experience', DEFAULT_EXPERIENCE);
 };
 
 export const createExperience = async (data) => {
@@ -679,19 +661,13 @@ export const updateExperience = async (id, data) => {
 
 export const deleteExperience = async (id) => {
   try {
-    const current = getLocalStorage('portfolio_admin_experience', []);
+    const current = await getExperience();
     const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
     setLocalStorage('portfolio_admin_experience', updated);
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const res = await api.delete(`/experience/${id}`);
-    try {
-      const freshRes = await api.get('/experience');
-      if (Array.isArray(freshRes.data)) {
-        setLocalStorage('portfolio_admin_experience', freshRes.data);
-      }
-    } catch (fErr) {}
     return res.data;
   } catch (err) {
     return { message: 'Deleted successfully' };
@@ -707,13 +683,9 @@ export const getProjects = async () => {
       return res.data;
     }
   } catch (err) {
-    console.warn('Backend projects API unavailable, using local storage.');
+    console.warn('Backend projects API unavailable, using local storage / defaults.');
   }
-  const cached = getLocalStorage('portfolio_admin_projects', null);
-  if (Array.isArray(cached)) {
-    return cached;
-  }
-  return DEFAULT_PROJECTS;
+  return getLocalStorage('portfolio_admin_projects', DEFAULT_PROJECTS);
 };
 
 export const createProject = async (data) => {
@@ -743,21 +715,13 @@ export const updateProject = async (id, data) => {
 
 export const deleteProject = async (id) => {
   try {
-    const current = getLocalStorage('portfolio_admin_projects', []);
-    const updated = current.filter(
-      (item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id)
-    );
+    const current = await getProjects();
+    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
     setLocalStorage('portfolio_admin_projects', updated);
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const res = await api.delete(`/projects/${id}`);
-    try {
-      const freshRes = await api.get('/projects');
-      if (Array.isArray(freshRes.data)) {
-        setLocalStorage('portfolio_admin_projects', freshRes.data);
-      }
-    } catch (fErr) {}
     return res.data;
   } catch (err) {
     return { message: 'Deleted successfully' };
@@ -773,13 +737,9 @@ export const getCertificates = async () => {
       return res.data;
     }
   } catch (err) {
-    console.warn('Backend certificates API unavailable, using local storage.');
+    console.warn('Backend certificates API unavailable, using local storage / defaults.');
   }
-  const cached = getLocalStorage('portfolio_admin_certificates', null);
-  if (Array.isArray(cached)) {
-    return cached;
-  }
-  return DEFAULT_CERTIFICATES;
+  return getLocalStorage('portfolio_admin_certificates', DEFAULT_CERTIFICATES);
 };
 
 export const createCertificate = async (data) => {
@@ -809,21 +769,13 @@ export const updateCertificate = async (id, data) => {
 
 export const deleteCertificate = async (id) => {
   try {
-    const current = getLocalStorage('portfolio_admin_certificates', []);
-    const updated = current.filter(
-      (item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id)
-    );
+    const current = await getCertificates();
+    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
     setLocalStorage('portfolio_admin_certificates', updated);
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const res = await api.delete(`/certificates/${id}`);
-    try {
-      const freshRes = await api.get('/certificates');
-      if (Array.isArray(freshRes.data)) {
-        setLocalStorage('portfolio_admin_certificates', freshRes.data);
-      }
-    } catch (fErr) {}
     return res.data;
   } catch (err) {
     return { message: 'Deleted successfully' };
@@ -896,7 +848,7 @@ export const deleteContactMessage = async (id) => {
     const offlineMessages = JSON.parse(localStorage.getItem('portfolio_contact_messages') || '[]');
     const filtered = offlineMessages.filter((m) => (m._id || m.id) !== id);
     localStorage.setItem('portfolio_contact_messages', JSON.stringify(filtered));
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     const res = await api.delete(`/contact/${id}`);
