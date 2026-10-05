@@ -474,7 +474,10 @@ export const DEFAULT_RESUME = {
 const getLocalStorage = (key, fallback) => {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    if (item !== null && item !== undefined) {
+      return JSON.parse(item);
+    }
+    return fallback;
   } catch (err) {
     console.warn(`Error reading ${key} from localStorage:`, err);
     return fallback;
@@ -527,20 +530,27 @@ export const getEducation = async () => {
 };
 
 export const createEducation = async (data) => {
-  const current = await getEducation();
+  const cached = getLocalStorage('portfolio_admin_education', null);
+  const current = Array.isArray(cached) ? cached : (await getEducation());
   const newItem = { _id: 'edu_' + Date.now(), ...data };
-  const updated = [...current, newItem];
+  const updated = [newItem, ...current.filter((item) => (item._id || item.id) !== newItem._id)];
   setLocalStorage('portfolio_admin_education', updated);
   try {
     const res = await api.post('/education', data);
-    return res.data;
+    if (res.data && (res.data._id || res.data.id)) {
+      const serverUpdated = [res.data, ...current.filter((item) => (item._id || item.id) !== (res.data._id || res.data.id))];
+      setLocalStorage('portfolio_admin_education', serverUpdated);
+      return res.data;
+    }
+    return newItem;
   } catch (err) {
     return newItem;
   }
 };
 
 export const updateEducation = async (id, data) => {
-  const current = await getEducation();
+  const cached = getLocalStorage('portfolio_admin_education', null);
+  const current = Array.isArray(cached) ? cached : (await getEducation());
   const updated = current.map((item) => ((item._id || item.id) === id ? { ...item, ...data } : item));
   setLocalStorage('portfolio_admin_education', updated);
   try {
@@ -552,11 +562,9 @@ export const updateEducation = async (id, data) => {
 };
 
 export const deleteEducation = async (id) => {
-  try {
-    const current = await getEducation();
-    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
-    setLocalStorage('portfolio_admin_education', updated);
-  } catch (e) { }
+  const cached = getLocalStorage('portfolio_admin_education', []);
+  const updated = cached.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+  setLocalStorage('portfolio_admin_education', updated);
 
   try {
     const res = await api.delete(`/education/${id}`);
@@ -581,20 +589,27 @@ export const getSkills = async () => {
 };
 
 export const createSkill = async (data) => {
-  const current = await getSkills();
+  const cached = getLocalStorage('portfolio_admin_skills', null);
+  const current = Array.isArray(cached) ? cached : (await getSkills());
   const newItem = { _id: 'skill_' + Date.now(), ...data };
-  const updated = [...current, newItem];
+  const updated = [newItem, ...current.filter((item) => (item._id || item.id) !== newItem._id)];
   setLocalStorage('portfolio_admin_skills', updated);
   try {
     const res = await api.post('/skills', data);
-    return res.data;
+    if (res.data && (res.data._id || res.data.id)) {
+      const serverUpdated = [res.data, ...current.filter((item) => (item._id || item.id) !== (res.data._id || res.data.id))];
+      setLocalStorage('portfolio_admin_skills', serverUpdated);
+      return res.data;
+    }
+    return newItem;
   } catch (err) {
     return newItem;
   }
 };
 
 export const updateSkill = async (id, data) => {
-  const current = await getSkills();
+  const cached = getLocalStorage('portfolio_admin_skills', null);
+  const current = Array.isArray(cached) ? cached : (await getSkills());
   const updated = current.map((item) => ((item._id || item.id) === id ? { ...item, ...data } : item));
   setLocalStorage('portfolio_admin_skills', updated);
   try {
@@ -606,11 +621,9 @@ export const updateSkill = async (id, data) => {
 };
 
 export const deleteSkill = async (id) => {
-  try {
-    const current = await getSkills();
-    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
-    setLocalStorage('portfolio_admin_skills', updated);
-  } catch (e) { }
+  const cached = getLocalStorage('portfolio_admin_skills', []);
+  const updated = cached.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+  setLocalStorage('portfolio_admin_skills', updated);
 
   try {
     const res = await api.delete(`/skills/${id}`);
@@ -635,20 +648,27 @@ export const getExperience = async () => {
 };
 
 export const createExperience = async (data) => {
-  const current = await getExperience();
+  const cached = getLocalStorage('portfolio_admin_experience', null);
+  const current = Array.isArray(cached) ? cached : (await getExperience());
   const newItem = { _id: 'exp_' + Date.now(), ...data };
-  const updated = [...current, newItem];
+  const updated = [newItem, ...current.filter((item) => (item._id || item.id) !== newItem._id)];
   setLocalStorage('portfolio_admin_experience', updated);
   try {
     const res = await api.post('/experience', data);
-    return res.data;
+    if (res.data && (res.data._id || res.data.id)) {
+      const serverUpdated = [res.data, ...current.filter((item) => (item._id || item.id) !== (res.data._id || res.data.id))];
+      setLocalStorage('portfolio_admin_experience', serverUpdated);
+      return res.data;
+    }
+    return newItem;
   } catch (err) {
     return newItem;
   }
 };
 
 export const updateExperience = async (id, data) => {
-  const current = await getExperience();
+  const cached = getLocalStorage('portfolio_admin_experience', null);
+  const current = Array.isArray(cached) ? cached : (await getExperience());
   const updated = current.map((item) => ((item._id || item.id) === id ? { ...item, ...data } : item));
   setLocalStorage('portfolio_admin_experience', updated);
   try {
@@ -660,11 +680,9 @@ export const updateExperience = async (id, data) => {
 };
 
 export const deleteExperience = async (id) => {
-  try {
-    const current = await getExperience();
-    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
-    setLocalStorage('portfolio_admin_experience', updated);
-  } catch (e) { }
+  const cached = getLocalStorage('portfolio_admin_experience', []);
+  const updated = cached.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+  setLocalStorage('portfolio_admin_experience', updated);
 
   try {
     const res = await api.delete(`/experience/${id}`);
@@ -689,20 +707,27 @@ export const getProjects = async () => {
 };
 
 export const createProject = async (data) => {
-  const current = await getProjects();
+  const cached = getLocalStorage('portfolio_admin_projects', null);
+  const current = Array.isArray(cached) ? cached : (await getProjects());
   const newItem = { _id: 'proj_' + Date.now(), ...data };
-  const updated = [...current, newItem];
+  const updated = [newItem, ...current.filter((item) => (item._id || item.id) !== newItem._id)];
   setLocalStorage('portfolio_admin_projects', updated);
   try {
     const res = await api.post('/projects', data);
-    return res.data;
+    if (res.data && (res.data._id || res.data.id)) {
+      const serverUpdated = [res.data, ...current.filter((item) => (item._id || item.id) !== (res.data._id || res.data.id))];
+      setLocalStorage('portfolio_admin_projects', serverUpdated);
+      return res.data;
+    }
+    return newItem;
   } catch (err) {
     return newItem;
   }
 };
 
 export const updateProject = async (id, data) => {
-  const current = await getProjects();
+  const cached = getLocalStorage('portfolio_admin_projects', null);
+  const current = Array.isArray(cached) ? cached : (await getProjects());
   const updated = current.map((item) => ((item._id || item.id) === id ? { ...item, ...data } : item));
   setLocalStorage('portfolio_admin_projects', updated);
   try {
@@ -714,11 +739,9 @@ export const updateProject = async (id, data) => {
 };
 
 export const deleteProject = async (id) => {
-  try {
-    const current = await getProjects();
-    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
-    setLocalStorage('portfolio_admin_projects', updated);
-  } catch (e) { }
+  const cached = getLocalStorage('portfolio_admin_projects', []);
+  const updated = cached.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+  setLocalStorage('portfolio_admin_projects', updated);
 
   try {
     const res = await api.delete(`/projects/${id}`);
@@ -729,50 +752,100 @@ export const deleteProject = async (id) => {
 };
 
 // Certificates API
+const formatCertSkills = (skills) => {
+  if (Array.isArray(skills)) {
+    return skills.flatMap((s) => (typeof s === 'string' ? s.split(',').map((part) => part.trim()).filter(Boolean) : s));
+  }
+  if (typeof skills === 'string') {
+    return skills.split(',').map((part) => part.trim()).filter(Boolean);
+  }
+  return [];
+};
+
 export const getCertificates = async () => {
+  const cached = getLocalStorage('portfolio_admin_certificates', null);
   try {
     const res = await api.get('/certificates');
     if (Array.isArray(res.data)) {
-      setLocalStorage('portfolio_admin_certificates', res.data);
-      return res.data;
+      const merged = res.data.map((item) => {
+        let certImg = item.certificateImage;
+        if (!certImg && Array.isArray(cached)) {
+          const matchingCached = cached.find((c) => (c._id || c.id) === (item._id || item.id) || c.title === item.title);
+          if (matchingCached && matchingCached.certificateImage) {
+            certImg = matchingCached.certificateImage;
+          }
+        }
+        return {
+          ...item,
+          skills: formatCertSkills(item.skills),
+          certificateImage: certImg || '',
+        };
+      });
+      setLocalStorage('portfolio_admin_certificates', merged);
+      return merged;
     }
   } catch (err) {
     console.warn('Backend certificates API unavailable, using local storage / defaults.');
   }
-  return getLocalStorage('portfolio_admin_certificates', DEFAULT_CERTIFICATES);
+  const localCerts = getLocalStorage('portfolio_admin_certificates', DEFAULT_CERTIFICATES);
+  const certsArr = Array.isArray(localCerts) ? localCerts : DEFAULT_CERTIFICATES;
+  return certsArr.map((item) => ({
+    ...item,
+    skills: formatCertSkills(item.skills),
+  }));
 };
 
 export const createCertificate = async (data) => {
-  const current = await getCertificates();
-  const newItem = { _id: 'cert_' + Date.now(), ...data };
-  const updated = [...current, newItem];
+  const cached = getLocalStorage('portfolio_admin_certificates', null);
+  const fetched = await getCertificates();
+  const current = Array.isArray(cached) ? cached : (Array.isArray(fetched) ? fetched : []);
+  const formattedData = {
+    ...data,
+    skills: formatCertSkills(data.skills),
+  };
+  const newItem = { _id: 'cert_' + Date.now(), ...formattedData };
+  const updated = [newItem, ...current.filter((item) => (item._id || item.id) !== newItem._id)];
   setLocalStorage('portfolio_admin_certificates', updated);
   try {
-    const res = await api.post('/certificates', data);
-    return res.data;
+    const res = await api.post('/certificates', formattedData);
+    if (res.data && (res.data._id || res.data.id)) {
+      const resItem = { ...res.data, skills: formatCertSkills(res.data.skills) };
+      const serverUpdated = [resItem, ...current.filter((item) => (item._id || item.id) !== (resItem._id || resItem.id))];
+      setLocalStorage('portfolio_admin_certificates', serverUpdated);
+      return resItem;
+    }
+    return newItem;
   } catch (err) {
     return newItem;
   }
 };
 
 export const updateCertificate = async (id, data) => {
-  const current = await getCertificates();
-  const updated = current.map((item) => ((item._id || item.id) === id ? { ...item, ...data } : item));
+  const cached = getLocalStorage('portfolio_admin_certificates', null);
+  const fetched = await getCertificates();
+  const current = Array.isArray(cached) ? cached : (Array.isArray(fetched) ? fetched : []);
+  const formattedData = {
+    ...data,
+    skills: formatCertSkills(data.skills),
+  };
+  const updated = current.map((item) => ((item._id || item.id) === id ? { ...item, ...formattedData } : item));
   setLocalStorage('portfolio_admin_certificates', updated);
   try {
-    const res = await api.put(`/certificates/${id}`, data);
-    return res.data;
+    const res = await api.put(`/certificates/${id}`, formattedData);
+    if (res.data) {
+      return { ...res.data, skills: formatCertSkills(res.data.skills) };
+    }
+    return { ...formattedData, _id: id };
   } catch (err) {
-    return { ...data, _id: id };
+    return { ...formattedData, _id: id };
   }
 };
 
 export const deleteCertificate = async (id) => {
-  try {
-    const current = await getCertificates();
-    const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
-    setLocalStorage('portfolio_admin_certificates', updated);
-  } catch (e) { }
+  const cached = getLocalStorage('portfolio_admin_certificates', []);
+  const current = Array.isArray(cached) ? cached : [];
+  const updated = current.filter((item) => (item._id || item.id) !== id && String(item._id) !== String(id) && String(item.id) !== String(id));
+  setLocalStorage('portfolio_admin_certificates', updated);
 
   try {
     const res = await api.delete(`/certificates/${id}`);

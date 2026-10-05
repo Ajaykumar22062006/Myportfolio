@@ -24,8 +24,14 @@ export default function Certificates() {
   }, []);
 
   const getCertImage = (cert) => {
-    if (typeof cert === 'object' && cert.certificateImage) {
-      return cert.certificateImage;
+    if (typeof cert === 'object' && cert.certificateImage && typeof cert.certificateImage === 'string') {
+      const img = cert.certificateImage.trim();
+      if (img.length > 0) {
+        if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
+          return img;
+        }
+        return `data:image/png;base64,${img}`;
+      }
     }
     const type = typeof cert === 'object' ? cert.type : cert;
     switch (type) {
@@ -190,30 +196,40 @@ export default function Certificates() {
                   </div>
 
                   {/* Skills Demonstrated */}
-                  {cert.skills && cert.skills.length > 0 && (
-                    <div style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                        Skills Demonstrated:
+                  {(() => {
+                    const parsedSkills = Array.isArray(cert.skills)
+                      ? cert.skills.flatMap((s) => (typeof s === 'string' ? s.split(',').map((item) => item.trim()).filter(Boolean) : s))
+                      : typeof cert.skills === 'string'
+                      ? cert.skills.split(',').map((s) => s.trim()).filter(Boolean)
+                      : [];
+
+                    if (parsedSkills.length === 0) return null;
+
+                    return (
+                      <div style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                          Skills Demonstrated:
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                          {parsedSkills.map((skill, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                fontSize: '0.75rem',
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid var(--border-color)',
+                                color: 'var(--text-secondary)',
+                              }}
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                        {cert.skills.map((skill, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              fontSize: '0.75rem',
-                              padding: '0.15rem 0.5rem',
-                              borderRadius: '0.25rem',
-                              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid var(--border-color)',
-                              color: 'var(--text-secondary)',
-                            }}
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Action Trigger */}
                   <div style={{ marginTop: '1.25rem' }}>

@@ -146,6 +146,7 @@ export default function AdminDashboard() {
 
   const [certificatesList, setCertificatesList] = useState([]);
   const [showCertModal, setShowCertModal] = useState(false);
+  const [editingCertId, setEditingCertId] = useState(null);
   const [certAutoMsg, setCertAutoMsg] = useState('');
   const [newCert, setNewCert] = useState({
     title: '',
@@ -426,16 +427,68 @@ export default function AdminDashboard() {
   };
 
   // Certificate CRUD
-  const handleAddCertificate = async (e) => {
+  const handleOpenAddCertModal = () => {
+    setEditingCertId(null);
+    setCertAutoMsg('');
+    setNewCert({ title: '', subtitle: '', organization: '', issueDate: '', type: 'cisco', skills: '', certificateImage: '' });
+    setShowCertModal(true);
+  };
+
+  const handleEditCertificate = (cert) => {
+    setEditingCertId(cert._id || cert.id);
+    setCertAutoMsg('');
+    const skillsStr = Array.isArray(cert.skills)
+      ? cert.skills.join(', ')
+      : typeof cert.skills === 'string'
+      ? cert.skills
+      : '';
+    setNewCert({
+      title: cert.title || '',
+      subtitle: cert.subtitle || '',
+      organization: cert.organization || '',
+      issueDate: cert.issueDate || '',
+      type: cert.type || 'cisco',
+      skills: skillsStr,
+      certificateImage: cert.certificateImage || '',
+    });
+    setShowCertModal(true);
+  };
+
+  const handleSaveCertificate = async (e) => {
     e.preventDefault();
     try {
-      await createCertificate(newCert);
+      const formattedSkills = Array.isArray(newCert.skills)
+        ? newCert.skills.flatMap((s) => (typeof s === 'string' ? s.split(',').map((part) => part.trim()).filter(Boolean) : s))
+        : typeof newCert.skills === 'string'
+        ? newCert.skills.split(',').map((part) => part.trim()).filter(Boolean)
+        : [];
+
+      const certToSave = {
+        ...newCert,
+        skills: formattedSkills,
+      };
+
+      let savedObj;
+      if (editingCertId) {
+        savedObj = await updateCertificate(editingCertId, certToSave);
+      } else {
+        savedObj = await createCertificate(certToSave);
+      }
       setShowCertModal(false);
+      setEditingCertId(null);
       setCertAutoMsg('');
       setNewCert({ title: '', subtitle: '', organization: '', issueDate: '', type: 'cisco', skills: '', certificateImage: '' });
-      loadDashboardData();
+      if (savedObj) {
+        setCertificatesList((prev) => {
+          const prevArr = Array.isArray(prev) ? prev : [];
+          const idToMatch = savedObj._id || savedObj.id || editingCertId;
+          const filtered = prevArr.filter((item) => (item._id || item.id) !== idToMatch);
+          return [savedObj, ...filtered];
+        });
+      }
     } catch (err) {
-      alert('Failed to add certificate');
+      console.error('Failed to save certificate:', err);
+      alert('Failed to save certificate: ' + (err?.message || err || 'Unknown error'));
     }
   };
 
@@ -895,7 +948,7 @@ export default function AdminDashboard() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Manage Courses & Certificates</h2>
-                  <button onClick={() => setShowCertModal(true)} className="btn btn-primary btn-sm">
+                  <button onClick={handleOpenAddCertModal} className="btn btn-primary btn-sm">
                     <Plus size={16} />
                     <span>Add Certificate</span>
                   </button>
@@ -904,14 +957,28 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {certificatesList.map((cert) => (
                     <div key={cert._id || cert.id} className="glass-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>{cert.organization}</span>
-                        <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{cert.subtitle || cert.title}</h3>
-                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Issued: {cert.issueDate}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                        {cert.certificateImage ? (
+                          <img src={cert.certificateImage} alt={cert.title} style={{ width: '64px', height: '48px', borderRadius: '0.4rem', objectFit: 'cover', border: '1px solid var(--border-color)' }} />
+                        ) : (
+                          <div style={{ width: '64px', height: '48px', borderRadius: '0.4rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Award size={22} style={{ color: 'var(--text-muted)' }} />
+                          </div>
+                        )}
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 700 }}>{cert.organization}</span>
+                          <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{cert.subtitle || cert.title}</h3>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Issued: {cert.issueDate}</div>
+                        </div>
                       </div>
-                      <button onClick={() => handleDeleteCertificate(cert._id || cert.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }}>
-                        <Trash2 size={16} />
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button onClick={() => handleEditCertificate(cert)} className="btn btn-outline btn-sm" style={{ color: 'var(--accent-cyan)', borderColor: 'rgba(56, 189, 248, 0.3)' }} title="Edit Certificate">
+                          <Pencil size={16} />
+                        </button>
+                        <button onClick={() => handleDeleteCertificate(cert._id || cert.id)} className="btn btn-outline btn-sm" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)' }} title="Delete Certificate">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1142,18 +1209,18 @@ export default function AdminDashboard() {
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 100 }}>
           <div className="glass-card" style={{ padding: '2rem', width: '100%', maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Add Certificate / Course</h3>
-              <button onClick={() => { setShowCertModal(false); setCertAutoMsg(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{editingCertId ? 'Edit Certificate Details' : 'Add Certificate / Course'}</h3>
+              <button onClick={() => { setShowCertModal(false); setEditingCertId(null); setCertAutoMsg(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
             </div>
 
             {/* Auto-Fetch File Upload Dropzone */}
             <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: '0.75rem', border: '2px dashed var(--border-color)', textAlign: 'center', marginBottom: '1.25rem' }}>
               <Upload size={26} style={{ color: 'var(--accent-cyan)', marginBottom: '0.4rem' }} />
               <div style={{ fontSize: '0.92rem', fontWeight: 700, marginBottom: '0.2rem' }}>
-                Upload Certificate File to Auto-Fetch Details
+                Upload Original Certificate File / Image
               </div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
-                Upload your certificate file/image to automatically extract title, organization, course name, and image preview.
+                Select your original certificate image or PDF scan to display it directly on your portfolio.
               </div>
               <input
                 type="file"
@@ -1173,12 +1240,22 @@ export default function AdminDashboard() {
             {/* Certificate Image Preview Thumbnail if uploaded */}
             {newCert.certificateImage && (
               <div style={{ marginBottom: '1.25rem', textAlign: 'center', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600 }}>Certificate Image Preview</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 600 }}>Original Certificate Image Loaded</div>
                 <img src={newCert.certificateImage} alt="Certificate Preview" style={{ maxHeight: '160px', maxWidth: '100%', borderRadius: '0.4rem', objectFit: 'contain' }} />
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setNewCert({ ...newCert, certificateImage: '' })}
+                    className="btn btn-outline btn-sm"
+                    style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)', fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}
+                  >
+                    Remove Image
+                  </button>
+                </div>
               </div>
             )}
 
-            <form onSubmit={handleAddCertificate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleSaveCertificate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Certificate Title</label>
                 <input type="text" placeholder="Title (e.g. Certificate of Course Completion)" required value={newCert.title} onChange={(e) => setNewCert({ ...newCert, title: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
@@ -1195,7 +1272,7 @@ export default function AdminDashboard() {
                 <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Issue Date</label>
                 <input type="text" placeholder="Issue Date (e.g. 13 August 2026)" required value={newCert.issueDate} onChange={(e) => setNewCert({ ...newCert, issueDate: e.target.value })} style={{ width: '100%', padding: '0.7rem', borderRadius: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', marginTop: '0.2rem' }} />
               </div>
-              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem', marginTop: '0.5rem' }}>Save Certificate</button>
+              <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem', marginTop: '0.5rem' }}>{editingCertId ? 'Update Certificate' : 'Save Certificate'}</button>
             </form>
           </div>
         </div>

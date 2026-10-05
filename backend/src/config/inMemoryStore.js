@@ -350,9 +350,19 @@ class InMemoryStore {
     return this.certificates[idx];
   }
   deleteCertificate(id) {
-    const idx = this.certificates.findIndex((c) => c._id === id || c.id === id);
+    const targetId = String(id).toLowerCase();
+    const idx = this.certificates.findIndex(
+      (c) =>
+        String(c._id || c.id).toLowerCase() === targetId ||
+        (c.title && c.title.toLowerCase().includes(targetId)) ||
+        (c.organization && c.organization.toLowerCase().includes(targetId))
+    );
     if (idx === -1) return false;
     this.certificates.splice(idx, 1);
+    return true;
+  }
+  clearCertificates() {
+    this.certificates = [];
     return true;
   }
 
