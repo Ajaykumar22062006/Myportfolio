@@ -3,6 +3,8 @@ import { getCertificates, DEFAULT_CERTIFICATES } from '../services/api';
 import tcsCertImg from '../assets/tcs_ion_cert.png';
 import ciscoCertImg from '../assets/cisco_cert.png';
 import infosysCertImg from '../assets/infosys_cert.png';
+import softrateCertImg from '../assets/softrate_cert.png';
+import tataCertImg from '../assets/tata_elxsi_cert.png';
 import { Award, Eye, X, ZoomIn, ZoomOut, ShieldCheck, Calendar, CheckCircle2 } from 'lucide-react';
 
 export default function Certificates() {
@@ -27,6 +29,12 @@ export default function Certificates() {
     if (typeof cert === 'object' && cert.certificateImage && typeof cert.certificateImage === 'string') {
       const img = cert.certificateImage.trim();
       if (img.length > 0) {
+        if (img.startsWith('/certificates/tcs') || img.includes('tcs_cert')) return tcsCertImg;
+        if (img.startsWith('/certificates/cisco') || img.includes('cisco_cert')) return ciscoCertImg;
+        if (img.startsWith('/certificates/infosys') || img.includes('infosys_cert')) return infosysCertImg;
+        if (img.startsWith('/certificates/softrate') || img.includes('softrate_cert')) return softrateCertImg;
+        if (img.startsWith('/certificates/tata') || img.includes('tata_elxsi_cert')) return tataCertImg;
+
         if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
           return img;
         }
@@ -34,16 +42,27 @@ export default function Certificates() {
       }
     }
     const type = typeof cert === 'object' ? cert.type : cert;
-    switch (type) {
-      case 'tcs_ion':
-        return tcsCertImg;
-      case 'cisco':
-        return ciscoCertImg;
-      case 'infosys':
-        return infosysCertImg;
-      default:
-        return null;
+    const title = typeof cert === 'object' ? (cert.title || '').toLowerCase() : '';
+    const org = typeof cert === 'object' ? (cert.organization || '').toLowerCase() : '';
+    const subtitle = typeof cert === 'object' ? (cert.subtitle || '').toLowerCase() : '';
+
+    if (type === 'tcs_ion' || org.includes('tcs') || subtitle.includes('hostel') || title.includes('hostel')) {
+      return tcsCertImg;
     }
+    if (type === 'cisco' || org.includes('cisco') || subtitle.includes('network') || title.includes('network')) {
+      return ciscoCertImg;
+    }
+    if (type === 'infosys' || org.includes('infosys') || subtitle.includes('sql') || subtitle.includes('toad') || title.includes('sql')) {
+      return infosysCertImg;
+    }
+    if (type === 'softrate' || org.includes('softrate') || subtitle.includes('full stack') || title.includes('internship')) {
+      return softrateCertImg;
+    }
+    if (type === 'tata_elxsi' || org.includes('tata') || subtitle.includes('teliport') || title.includes('participation')) {
+      return tataCertImg;
+    }
+
+    return null;
   };
 
   const handleOpenModal = (cert) => {
@@ -106,7 +125,7 @@ export default function Certificates() {
                 <div
                   style={{
                     height: '210px',
-                    backgroundColor: 'var(--bg-secondary)',
+                    backgroundColor: '#ffffff',
                     position: 'relative',
                     overflow: 'hidden',
                     display: 'flex',
@@ -122,7 +141,9 @@ export default function Certificates() {
                       style={{
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover',
+                        objectFit: 'contain',
+                        backgroundColor: '#ffffff',
+                        padding: '0.25rem',
                         transition: 'transform 0.3s ease',
                       }}
                     />
