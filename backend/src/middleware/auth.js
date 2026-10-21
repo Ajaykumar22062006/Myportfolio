@@ -13,7 +13,8 @@ export const protectAdmin = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.SECRET_KEY || 'ajay_fullstack_portfolio_secret_key_2026');
+    const secret = process.env.JWT_SECRET || process.env.SECRET_KEY || 'ajay_fullstack_portfolio_secret_key_2026';
+    const decoded = jwt.verify(token, secret);
     req.user = decoded;
     next();
   } catch (error) {

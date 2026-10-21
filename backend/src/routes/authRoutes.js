@@ -15,7 +15,7 @@ router.post('/login', async (req, res) => {
     }
 
     if (username === adminUser && password === adminPass) {
-      const secret = process.env.SECRET_KEY || 'ajay_fullstack_portfolio_secret_key_2026';
+      const secret = process.env.JWT_SECRET || process.env.SECRET_KEY || 'ajay_fullstack_portfolio_secret_key_2026';
       const token = jwt.sign({ username, role: 'admin' }, secret, { expiresIn: '7d' });
 
       return res.json({
