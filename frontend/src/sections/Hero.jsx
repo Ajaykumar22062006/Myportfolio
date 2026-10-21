@@ -30,17 +30,12 @@ export default function Hero() {
     e.preventDefault();
     try {
       const resumeToUse = await getResume();
-      if (!resumeToUse) {
-        window.location.hash = 'resume';
-        return;
-      }
-
-      const content = resumeToUse.base64Content;
-      const filename = resumeToUse.filename || 'ajay-resume.pdf';
-      const remoteUrl = resumeToUse.url || resumeToUse.blobUrl;
+      const content = resumeToUse?.base64Content;
+      const filename = resumeToUse?.filename || 'ajay-resume.pdf';
+      const remoteUrl = resumeToUse?.url || resumeToUse?.blobUrl;
 
       if (content) {
-        const blobUrl = getBlobUrlFromBase64(content, resumeToUse.fileType || 'application/pdf');
+        const blobUrl = getBlobUrlFromBase64(content, resumeToUse?.fileType || 'application/pdf');
         if (blobUrl) {
           const link = document.createElement('a');
           link.href = blobUrl;
@@ -53,7 +48,7 @@ export default function Hero() {
         }
       }
 
-      if (remoteUrl && typeof remoteUrl === 'string' && remoteUrl.trim() !== '' && !remoteUrl.includes('/ajay-resume.pdf')) {
+      if (remoteUrl && typeof remoteUrl === 'string' && remoteUrl.trim() !== '') {
         const link = document.createElement('a');
         link.href = remoteUrl;
         link.download = filename;
@@ -63,7 +58,12 @@ export default function Hero() {
         return;
       }
 
-      window.location.hash = 'resume';
+      const link = document.createElement('a');
+      link.href = '/ajay-resume.pdf';
+      link.download = 'ajay-resume.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (err) {
       window.location.hash = 'resume';
     }

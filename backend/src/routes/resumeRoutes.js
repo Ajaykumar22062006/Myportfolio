@@ -9,6 +9,10 @@ const router = express.Router();
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
 router.get('/', async (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
   try {
     if (isDbConnected()) {
       let resume = await Resume.findOne({ isCurrent: true }).sort({ updatedAt: -1 });
@@ -70,10 +74,13 @@ const handleResumeUpload = async (req, res) => {
       return res.status(400).json({ message: 'Filename and content (base64Content or blobUrl) are required' });
     }
 
-    const fileUrl = blobUrl || url || '';
+    const host = req.get('host') || 'localhost:5000';
+    const protocol = req.protocol || 'http';
+    const fileUrl = blobUrl || url || `${protocol}://${host}/api/resume/file`;
+    const downloadUrl = `${protocol}://${host}/api/resume/download`;
 
     // Always update memory store as fallback
-    store.saveResume({ filename, fileType, base64Content, url: fileUrl, blobUrl: fileUrl, isCurrent: true });
+    store.saveResume({ filename, fileType, base64Content, url: fileUrl, blobUrl: fileUrl, downloadUrl, isCurrent: true });
 
     if (isDbConnected()) {
       await Resume.updateMany({}, { isCurrent: false });
@@ -83,6 +90,7 @@ const handleResumeUpload = async (req, res) => {
         base64Content: base64Content || '',
         url: fileUrl,
         blobUrl: fileUrl,
+        downloadUrl,
         isCurrent: true,
         uploadedAt: new Date(),
       });

@@ -7,65 +7,84 @@ export default function Resume() {
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let createdBlobUrl = null;
+  const loadResumeData = async () => {
+    setLoading(true);
+    try {
+      const data = await getResume();
+      const activeData = data || {
+        filename: 'ajay-resume.pdf',
+        fileType: 'application/pdf',
+        url: '/ajay-resume.pdf',
+      };
 
-    const fetchDbResume = async () => {
-      setLoading(true);
-      try {
-        const data = await getResume();
-        const activeData = data || {
-          filename: 'ajay-resume.pdf',
-          fileType: 'application/pdf',
-          url: '/ajay-resume.pdf',
-        };
+      setDbResume(activeData);
 
-        setDbResume(activeData);
-
-        // Priority 1: Convert base64Content to PDF Blob URL if available
-        if (activeData.base64Content && typeof activeData.base64Content === 'string' && activeData.base64Content.trim() !== '') {
-          const blobUrl = getBlobUrlFromBase64(activeData.base64Content, activeData.fileType || 'application/pdf');
-          if (blobUrl) {
-            createdBlobUrl = blobUrl;
-            setPdfBlobUrl(blobUrl);
-          } else {
-            setPdfBlobUrl(activeData.url || activeData.blobUrl || '/ajay-resume.pdf');
-          }
+      // Priority 1: Convert base64Content to PDF Blob URL if available
+      if (activeData.base64Content && typeof activeData.base64Content === 'string' && activeData.base64Content.trim() !== '') {
+        const blobUrl = getBlobUrlFromBase64(activeData.base64Content, activeData.fileType || 'application/pdf');
+        if (blobUrl) {
+          setPdfBlobUrl(blobUrl);
         } else {
-          // Priority 2: Remote URL or Static PDF URL
           setPdfBlobUrl(activeData.url || activeData.blobUrl || '/ajay-resume.pdf');
         }
-      } catch (err) {
-        console.error('fetchDbResume error in Resume.jsx:', err);
-        setDbResume({
-          filename: 'ajay-resume.pdf',
-          fileType: 'application/pdf',
-          url: '/ajay-resume.pdf',
-        });
-        setPdfBlobUrl('/ajay-resume.pdf');
-      } finally {
-        setLoading(false);
+      } else {
+        setPdfBlobUrl(activeData.url || activeData.blobUrl || '/ajay-resume.pdf');
       }
+    } catch (err) {
+      console.error('fetchDbResume error in Resume.jsx:', err);
+      setDbResume({
+        filename: 'ajay-resume.pdf',
+        fileType: 'application/pdf',
+        url: '/ajay-resume.pdf',
+      });
+      setPdfBlobUrl('/ajay-resume.pdf');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadResumeData();
+
+    const handleUpdate = () => {
+      loadResumeData();
     };
 
-    fetchDbResume();
+    window.addEventListener('portfolio_resume_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
 
-    // Revoke object URL when component unmounts to prevent memory leaks
     return () => {
-      if (createdBlobUrl && createdBlobUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(createdBlobUrl);
-      }
+      window.removeEventListener('portfolio_resume_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
     };
   }, []);
 
   const handleViewResume = () => {
-    const targetUrl = pdfBlobUrl || dbResume?.url || dbResume?.blobUrl || '/ajay-resume.pdf';
-    const win = window.open(targetUrl, '_blank');
-    if (!win) window.location.href = targetUrl;
+    let targetUrl = pdfBlobUrl;
+    if (!targetUrl && dbResume?.base64Content) {
+      targetUrl = getBlobUrlFromBase64(dbResume.base64Content, dbResume.fileType || 'application/pdf');
+    }
+    if (!targetUrl) {
+      targetUrl = dbResume?.url || dbResume?.blobUrl || '/ajay-resume.pdf';
+    }
+
+    if (targetUrl) {
+      const win = window.open(targetUrl, '_blank');
+      if (!win) window.location.href = targetUrl;
+    }
   };
 
   const handleDownloadResume = () => {
-    const targetUrl = pdfBlobUrl || dbResume?.url || dbResume?.blobUrl || '/ajay-resume.pdf';
+    let targetUrl = pdfBlobUrl;
+    let shouldRevoke = false;
+    if (!targetUrl && dbResume?.base64Content) {
+      targetUrl = getBlobUrlFromBase64(dbResume.base64Content, dbResume.fileType || 'application/pdf');
+      shouldRevoke = true;
+    }
+    if (!targetUrl) {
+      targetUrl = dbResume?.url || dbResume?.blobUrl || '/ajay-resume.pdf';
+    }
+
     const filename = dbResume?.filename || 'ajay-resume.pdf';
     const link = document.createElement('a');
     link.href = targetUrl;
@@ -73,6 +92,9 @@ export default function Resume() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    if (shouldRevoke && targetUrl?.startsWith('blob:')) {
+      setTimeout(() => URL.revokeObjectURL(targetUrl), 10000);
+    }
   };
 
   return (

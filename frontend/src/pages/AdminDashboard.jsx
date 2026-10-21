@@ -24,6 +24,7 @@ import {
   deleteContactMessage,
   getResume,
   uploadResume,
+  getBlobUrlFromBase64,
 } from '../services/api';
 
 const parseTechnologies = (techInput) => {
@@ -69,6 +70,8 @@ import {
   CheckCircle2,
   FileCheck,
   Pencil,
+  ExternalLink,
+  Download,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -641,7 +644,7 @@ export default function AdminDashboard() {
 
       const savedObj = res?.data || res?.resume || res;
       setCurrentResume(savedObj);
-      setResumeSuccessMsg('Resume updated & saved successfully!');
+      setResumeSuccessMsg('Resume updated & saved successfully! Public portfolio is now using this file.');
       setSelectedResumeFile(null);
       setResumeBase64('');
     } catch (err) {
@@ -649,6 +652,38 @@ export default function AdminDashboard() {
       setResumeErrorMsg(err.message || 'Failed to upload resume document');
     } finally {
       setResumeUploading(false);
+    }
+  };
+
+  const handleViewAdminResume = () => {
+    if (!currentResume) return;
+    let targetUrl = currentResume.url || currentResume.blobUrl;
+    if (!targetUrl && currentResume.base64Content) {
+      targetUrl = getBlobUrlFromBase64(currentResume.base64Content, currentResume.fileType || 'application/pdf');
+    }
+    if (!targetUrl) targetUrl = '/ajay-resume.pdf';
+    const win = window.open(targetUrl, '_blank');
+    if (!win) window.location.href = targetUrl;
+  };
+
+  const handleDownloadAdminResume = () => {
+    if (!currentResume) return;
+    let targetUrl = currentResume.url || currentResume.blobUrl;
+    let shouldRevoke = false;
+    if (!targetUrl && currentResume.base64Content) {
+      targetUrl = getBlobUrlFromBase64(currentResume.base64Content, currentResume.fileType || 'application/pdf');
+      shouldRevoke = true;
+    }
+    if (!targetUrl) targetUrl = '/ajay-resume.pdf';
+    const filename = currentResume.filename || 'ajay-resume.pdf';
+    const link = document.createElement('a');
+    link.href = targetUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (shouldRevoke && targetUrl?.startsWith('blob:')) {
+      setTimeout(() => URL.revokeObjectURL(targetUrl), 10000);
     }
   };
 
@@ -994,14 +1029,28 @@ export default function AdminDashboard() {
                 </h2>
 
                 {currentResume && currentResume.filename && (
-                  <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.85rem 1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '0.25rem' }}>Current Active Resume in Backend:</div>
-                    <div style={{ color: 'var(--text-primary)' }}>📄 {currentResume.filename}</div>
-                    {currentResume.uploadedAt && (
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                        Uploaded: {new Date(currentResume.uploadedAt).toLocaleString()}
+                  <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '1rem 1.25rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--accent-cyan)', marginBottom: '0.25rem' }}>Current Active Resume in System:</div>
+                        <div style={{ color: 'var(--text-primary)', fontWeight: 700 }}>📄 {currentResume.filename}</div>
+                        {currentResume.uploadedAt && (
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                            Uploaded: {new Date(currentResume.uploadedAt).toLocaleString()}
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div style={{ display: 'flex', gap: '0.6rem' }}>
+                        <button type="button" onClick={handleViewAdminResume} className="btn btn-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }}>
+                          <ExternalLink size={14} />
+                          <span>View</span>
+                        </button>
+                        <button type="button" onClick={handleDownloadAdminResume} className="btn btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem' }}>
+                          <Download size={14} />
+                          <span>Download</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 

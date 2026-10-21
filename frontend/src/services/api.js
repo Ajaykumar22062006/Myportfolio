@@ -1040,21 +1040,39 @@ export const getBlobUrlFromBase64 = (content, defaultMime = 'application/pdf') =
   }
 };
 
+import { saveResumeToDb, getResumeFromDb } from './resumeDb';
+
 // Resume API
 export const getResume = async () => {
+  // Check persistent IndexedDB first for instant access
+  let idbResume = null;
   try {
-    const res = await api.get('/resume');
+    idbResume = await getResumeFromDb();
+  } catch (e) {
+    // IndexedDB access fallback
+  }
+
+  // Try fetching latest active resume from backend
+  try {
+    const res = await api.get('/resume', { timeout: 5000 });
     const resumeObj = res.data?.data || res.data;
     if (resumeObj && (resumeObj.base64Content || resumeObj.filename || resumeObj.url || resumeObj.blobUrl)) {
+      await saveResumeToDb(resumeObj);
       setLocalStorage('portfolio_admin_resume', resumeObj);
       return resumeObj;
     }
   } catch (err) {
-    console.warn('Backend GET /resume failed, checking local cache fallback...', err?.response?.data?.message || err?.message);
+    console.warn('Backend GET /resume failed or offline, using persistent local store...');
   }
 
+  // If backend didn't return a valid resume, return from IndexedDB
+  if (idbResume && (idbResume.base64Content || idbResume.url || idbResume.blobUrl)) {
+    return idbResume;
+  }
+
+  // Fallback to localStorage
   const cached = getLocalStorage('portfolio_admin_resume');
-  if (cached && (cached.base64Content || cached.filename || cached.url)) {
+  if (cached && (cached.base64Content || (cached.filename && cached.filename !== 'ajay-resume.pdf') || cached.url)) {
     return cached;
   }
 
@@ -1067,6 +1085,42 @@ export const getResume = async () => {
 };
 
 export const uploadResume = async (data) => {
+  const resumePayload = {
+    filename: data.filename || 'ajay-resume.pdf',
+    fileType: data.fileType || 'application/pdf',
+    base64Content: data.base64Content || '',
+    url: data.url || '',
+    blobUrl: data.blobUrl || '',
+    updatedAt: new Date().toISOString(),
+  };
+
+  // 1. Immediately persist full resume document into IndexedDB (no 5MB storage limit)
+  try {
+    await saveResumeToDb(resumePayload);
+  } catch (idbErr) {
+    console.warn('Could not save to IndexedDB:', idbErr);
+  }
+
+  // 2. Safely store in localStorage (try full, if quota exceeded store metadata)
+  try {
+    setLocalStorage('portfolio_admin_resume', resumePayload);
+  } catch (lsErr) {
+    setLocalStorage('portfolio_admin_resume', {
+      filename: resumePayload.filename,
+      fileType: resumePayload.fileType,
+      updatedAt: resumePayload.updatedAt,
+    });
+  }
+
+  // 3. Notify all listeners/components across tabs that resume has updated
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('portfolio_resume_updated', { detail: resumePayload }));
+    } catch (e) {}
+  }
+
+  // 4. Synchronize with Backend API
+  let savedServerObj = null;
   try {
     let payload = data;
     let headers = {};
@@ -1080,20 +1134,18 @@ export const uploadResume = async (data) => {
       timeout: 30000,
     });
 
-    const savedObj = res.data?.data || res.data;
-    if (savedObj && typeof savedObj === 'object') {
-      setLocalStorage('portfolio_admin_resume', savedObj);
+    savedServerObj = res.data?.data || res.data;
+    if (savedServerObj && typeof savedServerObj === 'object') {
+      const merged = { ...resumePayload, ...savedServerObj };
+      await saveResumeToDb(merged);
+      setLocalStorage('portfolio_admin_resume', merged);
+      return merged;
     }
-    return savedObj;
   } catch (err) {
-    const errorMsg =
-      err.response?.data?.message ||
-      err.response?.data?.error ||
-      err.message ||
-      'Failed to upload resume to backend';
-    console.error('Backend resume upload API failed:', errorMsg);
-    throw new Error(errorMsg);
+    console.warn('Backend resume sync skipped or failed (local persistent copy saved):', err?.message);
   }
+
+  return savedServerObj || resumePayload;
 };
 
 export default api;

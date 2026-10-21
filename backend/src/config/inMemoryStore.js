@@ -1,7 +1,17 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 class InMemoryStore {
   constructor() {
+    this.resume = null;
+    try {
+      const dataFilePath = path.resolve(process.cwd(), 'data', 'current_resume.json');
+      if (fs.existsSync(dataFilePath)) {
+        const raw = fs.readFileSync(dataFilePath, 'utf-8');
+        this.resume = JSON.parse(raw);
+      }
+    } catch (e) {}
     this.profile = {
       name: 'Ajay Kumar D',
       title: 'Aspiring Full-Stack Developer',
@@ -451,11 +461,23 @@ class InMemoryStore {
   saveResume(data) {
     this.resume = {
       _id: 'resume_active',
-      filename: data.filename,
-      fileType: data.fileType,
-      base64Content: data.base64Content,
-      updatedAt: new Date().toISOString(),
+      filename: data.filename || 'ajay-resume.pdf',
+      fileType: data.fileType || 'application/pdf',
+      base64Content: data.base64Content || '',
+      url: data.url || '',
+      blobUrl: data.blobUrl || '',
+      downloadUrl: data.downloadUrl || '',
+      updatedAt: data.updatedAt || new Date().toISOString(),
     };
+    try {
+      const dataDir = path.resolve(process.cwd(), 'data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(dataDir, 'current_resume.json'), JSON.stringify(this.resume, null, 2));
+    } catch (e) {
+      console.warn('Could not persist resume to disk:', e.message);
+    }
     return this.resume;
   }
 }
