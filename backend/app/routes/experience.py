@@ -8,7 +8,7 @@ DEFAULT_EXPERIENCE = [
     {
         'role': 'Full-Stack Developer Intern',
         'company': 'TCS iON Applied Industry Projects (AIP)',
-        'location': 'Remote',
+        'location': '',
         'period': 'Feb 2026 – May 2026',
         'type': 'Industry Internship',
         'description': 'Developed and implemented the University Hostel Management System digitizing student allocation, room records, fee payment tracking, and admin dashboards.',

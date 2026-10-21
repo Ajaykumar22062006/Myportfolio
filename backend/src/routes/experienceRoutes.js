@@ -12,7 +12,14 @@ router.get('/', async (req, res) => {
   try {
     if (isDbConnected()) {
       const items = await Experience.find().sort({ createdAt: -1 });
-      return res.json(items);
+      const sanitized = items.map((item) => {
+        const obj = item.toObject ? item.toObject() : { ...item._doc };
+        if (obj.location && obj.location.trim().toLowerCase() === 'remote') {
+          obj.location = '';
+        }
+        return obj;
+      });
+      return res.json(sanitized);
     }
     return res.json(store.getExperience());
   } catch (error) {

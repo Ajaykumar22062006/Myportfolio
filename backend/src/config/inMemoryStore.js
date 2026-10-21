@@ -101,7 +101,7 @@ class InMemoryStore {
         _id: 'exp_1',
         role: 'Full-Stack Developer Intern',
         company: 'TCS iON Applied Industry Projects (AIP)',
-        location: 'Remote',
+        location: '',
         period: 'Feb 2026 – May 2026',
         type: 'Industry Internship',
         description:

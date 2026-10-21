@@ -89,7 +89,7 @@ export default function Experience() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--accent-cyan)', fontWeight: 600, fontSize: '0.98rem', marginBottom: '0.5rem' }}>
                       <ShieldCheck size={16} />
                       <span>{exp.company}</span>
-                      {exp.location && (
+                      {exp.location && exp.location.trim() !== '' && exp.location.trim().toLowerCase() !== 'remote' && (
                         <>
                           <span style={{ color: 'var(--text-muted)' }}>•</span>
                           <span style={{ color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>

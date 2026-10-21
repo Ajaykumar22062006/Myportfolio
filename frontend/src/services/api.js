@@ -286,7 +286,7 @@ export const DEFAULT_EXPERIENCE = [
     "_id": "exp_tcs_1",
     "role": "Full-Stack Developer Intern",
     "company": "TCS iON Applied Industry Projects (AIP)",
-    "location": "Remote",
+    "location": "",
     "period": "Feb 2026 – May 2026",
     "type": "Industry Internship",
     "description": "Developed and implemented the University Hostel Management System digitizing student allocation, room records, fee payment tracking, and admin dashboards.",
@@ -664,17 +664,31 @@ export const deleteSkill = async (id) => {
 };
 
 // Experience API
+const sanitizeExperienceList = (list) => {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => {
+    if (item && item.location && item.location.trim().toLowerCase() === 'remote') {
+      return { ...item, location: '' };
+    }
+    return item;
+  });
+};
+
 export const getExperience = async () => {
   try {
     const res = await api.get('/experience');
     if (Array.isArray(res.data)) {
-      setLocalStorage('portfolio_admin_experience', res.data);
-      return res.data;
+      const sanitized = sanitizeExperienceList(res.data);
+      setLocalStorage('portfolio_admin_experience', sanitized);
+      return sanitized;
     }
   } catch (err) {
     console.warn('Backend experience API unavailable, using local storage / defaults.');
   }
-  return getLocalStorage('portfolio_admin_experience', DEFAULT_EXPERIENCE);
+  const cached = getLocalStorage('portfolio_admin_experience', DEFAULT_EXPERIENCE);
+  const sanitized = sanitizeExperienceList(cached);
+  setLocalStorage('portfolio_admin_experience', sanitized);
+  return sanitized;
 };
 
 export const createExperience = async (data) => {
